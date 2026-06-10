@@ -4,17 +4,17 @@ const API_VERSION = 'v21.0';
 const BASE_URL = 'https://graph.facebook.com/' + API_VERSION;
 
 const COL = {
-  CAMP_NAME: 1, OBJECTIVE: 2, CAMP_ID_EXISTING: 3,
-  ADSET_NAME: 4, DAILY_BUDGET: 5, START_DATE: 6, END_DATE: 7, ADSET_ID_EXISTING: 8,
-  PLACEMENT: 9, COUNTRIES_INCLUDE: 10, COUNTRIES_EXCLUDE: 11,
-  CITIES_INCLUDE: 12, CITIES_EXCLUDE: 13,
-  AGE_MIN: 14, AGE_MAX: 15, GENDER: 16,
-  INTERESTS: 17, CUSTOM_AUDIENCES: 18,
-  AD_NAME: 19, HEADLINE: 20, PRIMARY_TEXT: 21, DEST_URL: 22, IMAGE_URL: 23, CTA: 24,
-  ACCOUNT: 25, PAGE: 26,
-  STATUS: 27, OUT_CAMP_ID: 28, OUT_ADSET_ID: 29, OUT_AD_ID: 30
+  CAMP_NAME: 1, OBJECTIVE: 2,
+  ADSET_NAME: 3, DAILY_BUDGET: 4, START_DATE: 5, END_DATE: 6,
+  PLACEMENT: 7, COUNTRIES_INCLUDE: 8, COUNTRIES_EXCLUDE: 9,
+  CITIES_INCLUDE: 10, CITIES_EXCLUDE: 11,
+  AGE_MIN: 12, AGE_MAX: 13, GENDER: 14,
+  INTERESTS: 15, CUSTOM_AUDIENCES: 16,
+  AD_NAME: 17, HEADLINE: 18, PRIMARY_TEXT: 19, DEST_URL: 20, IMAGE_URL: 21, CTA: 22,
+  ACCOUNT: 23, PAGE: 24,
+  STATUS: 25, OUT_CAMP_ID: 26, OUT_ADSET_ID: 27, OUT_AD_ID: 28
 };
-const TOTAL_COLS = 30;
+const TOTAL_COLS = 28;
 
 // תמיד מחזיר act_XXXXXXX — בלי כפל
 function actId(id) {
@@ -161,7 +161,7 @@ function setupSheets() {
   s.getRange(1, 1, 1, 4).setFontWeight('bold').setBackground('#4a4a8a').setFontColor('white');
 
   s = ss.getSheetByName('קמפיינים') || ss.insertSheet('קמפיינים');
-  const ch = ['שם קמפיין','מטרה','Campaign ID קיים','שם אד-סט','תקציב יומי (₪)','תאריך התחלה','תאריך סיום','Adset ID קיים','Placement','מדינות לכלול','מדינות להחריג','ערים לכלול','ערים להחריג','גיל מינ','גיל מקס','מגדר','תחומי עניין','קהלים מותאמים','שם מודעה','כותרת','טקסט ראשי','URL יעד','URL תמונה','CTA','חשבון פרסום','דף','סטטוס','Campaign ID','Adset ID','Ad ID'];
+  const ch = ['שם קמפיין','מטרה','שם אד-סט','תקציב יומי (₪)','תאריך התחלה','תאריך סיום','Placement','מדינות לכלול','מדינות להחריג','ערים לכלול','ערים להחריג','גיל מינ','גיל מקס','מגדר','תחומי עניין','קהלים מותאמים','שם מודעה','כותרת','טקסט ראשי','URL יעד','URL תמונה','CTA','חשבון פרסום','דף','סטטוס','Campaign ID','Adset ID','Ad ID'];
   s.getRange(1, 1, 1, ch.length).setValues([ch]);
   s.getRange(1, 1, 1, ch.length).setFontWeight('bold').setBackground('#4a4a8a').setFontColor('white');
   s.setFrozenRows(1);
@@ -169,6 +169,7 @@ function setupSheets() {
   s.getRange(2, COL.PLACEMENT, 100).setDataValidation(SpreadsheetApp.newDataValidation().requireValueInList(['AUTOMATIC','FACEBOOK_FEEDS','INSTAGRAM_FEEDS','FACEBOOK_AND_INSTAGRAM','STORIES','REELS'], true).build());
   s.getRange(2, COL.GENDER, 100).setDataValidation(SpreadsheetApp.newDataValidation().requireValueInList(['ALL','MALE','FEMALE'], true).build());
   s.getRange(2, COL.CTA, 100).setDataValidation(SpreadsheetApp.newDataValidation().requireValueInList(['LEARN_MORE','SHOP_NOW','SIGN_UP','BOOK_TRAVEL','DOWNLOAD','CONTACT_US','GET_QUOTE','SUBSCRIBE','WATCH_MORE'], true).build());
+  s.getRange(2, TOTAL_COLS - 2, 100, 3).setBackground('#e8f0fe');
 
   s = ss.getSheetByName('שכפול') || ss.insertSheet('שכפול');
   const dh = ['Campaign ID לשכפול','שם חדש לקמפיין','חשבון פרסום','תאריך התחלה','שעת התחלה (HH:MM)','תאריך סיום','שעת סיום (HH:MM)','סטטוס','Campaign ID חדש'];
@@ -286,32 +287,27 @@ function uploadSelectedRow() {
   if (!pageId) { setStatus(sheet, row, '❌ לא נמצא דף: ' + values[COL.PAGE - 1]); return; }
   const accountEndpoint = actId(rawAccountId);
   try {
-    let campaignId = String(values[COL.CAMP_ID_EXISTING - 1] || '').trim();
-    let adsetId = String(values[COL.ADSET_ID_EXISTING - 1] || '').trim();
-    if (!campaignId) {
-      const campName = values[COL.CAMP_NAME - 1], objective = values[COL.OBJECTIVE - 1] || 'OUTCOME_TRAFFIC';
-      if (!campName) { setStatus(sheet, row, '❌ חסר שם קמפיין'); return; }
-      setStatus(sheet, row, '⏳ יוצר קמפיין...');
-      const campResp = metaPost(accountEndpoint + '/campaigns', { name: campName, objective: objective, status: 'PAUSED', special_ad_categories: '[]' });
-      if (campResp.error) { setStatus(sheet, row, '❌ ' + campResp.error.message); return; }
-      campaignId = campResp.id;
-      sheet.getRange(row, COL.OUT_CAMP_ID).setValue(campaignId);
-    }
-    if (!adsetId) {
-      const adsetName = values[COL.ADSET_NAME - 1], dailyBudget = values[COL.DAILY_BUDGET - 1], objective = values[COL.OBJECTIVE - 1] || 'OUTCOME_TRAFFIC';
-      if (!adsetName) { setStatus(sheet, row, '❌ חסר שם אד-סט'); return; }
-      if (!dailyBudget) { setStatus(sheet, row, '❌ חסר תקציב יומי'); return; }
-      setStatus(sheet, row, '⏳ יוצר אד-סט...');
-      const adsetParams = { name: adsetName, campaign_id: campaignId, daily_budget: Math.round(parseFloat(dailyBudget) * 100), billing_event: 'IMPRESSIONS', optimization_goal: getOptimizationGoal(objective), targeting: JSON.stringify(buildTargeting(values)), status: 'PAUSED' };
-      const startTs = buildTimestamp(values[COL.START_DATE - 1], '00:00');
-      const endTs = buildTimestamp(values[COL.END_DATE - 1], '23:59');
-      if (startTs) adsetParams.start_time = startTs;
-      if (endTs) adsetParams.end_time = endTs;
-      const adsetResp = metaPost(accountEndpoint + '/adsets', adsetParams);
-      if (adsetResp.error) { setStatus(sheet, row, '❌ ' + adsetResp.error.message); return; }
-      adsetId = adsetResp.id;
-      sheet.getRange(row, COL.OUT_ADSET_ID).setValue(adsetId);
-    }
+    const campName = values[COL.CAMP_NAME - 1], objective = values[COL.OBJECTIVE - 1] || 'OUTCOME_TRAFFIC';
+    if (!campName) { setStatus(sheet, row, '❌ חסר שם קמפיין'); return; }
+    setStatus(sheet, row, '⏳ יוצר קמפיין...');
+    const campResp = metaPost(accountEndpoint + '/campaigns', { name: campName, objective: objective, status: 'PAUSED', special_ad_categories: '[]' });
+    if (campResp.error) { setStatus(sheet, row, '❌ ' + campResp.error.message); return; }
+    const campaignId = campResp.id;
+    sheet.getRange(row, COL.OUT_CAMP_ID).setValue(campaignId);
+
+    const adsetName = values[COL.ADSET_NAME - 1], dailyBudget = values[COL.DAILY_BUDGET - 1];
+    if (!adsetName) { setStatus(sheet, row, '❌ חסר שם אד-סט'); return; }
+    if (!dailyBudget) { setStatus(sheet, row, '❌ חסר תקציב יומי'); return; }
+    setStatus(sheet, row, '⏳ יוצר אד-סט...');
+    const adsetParams = { name: adsetName, campaign_id: campaignId, daily_budget: Math.round(parseFloat(dailyBudget) * 100), billing_event: 'IMPRESSIONS', optimization_goal: getOptimizationGoal(objective), targeting: JSON.stringify(buildTargeting(values)), status: 'PAUSED' };
+    const startTs = buildTimestamp(values[COL.START_DATE - 1], '00:00');
+    const endTs = buildTimestamp(values[COL.END_DATE - 1], '23:59');
+    if (startTs) adsetParams.start_time = startTs;
+    if (endTs) adsetParams.end_time = endTs;
+    const adsetResp = metaPost(accountEndpoint + '/adsets', adsetParams);
+    if (adsetResp.error) { setStatus(sheet, row, '❌ ' + adsetResp.error.message); return; }
+    const adsetId = adsetResp.id;
+    sheet.getRange(row, COL.OUT_ADSET_ID).setValue(adsetId);
     const adName = values[COL.AD_NAME - 1], headline = values[COL.HEADLINE - 1], primaryText = values[COL.PRIMARY_TEXT - 1];
     const destUrl = values[COL.DEST_URL - 1], imageUrl = values[COL.IMAGE_URL - 1], cta = values[COL.CTA - 1] || 'LEARN_MORE';
     if (!adName) { setStatus(sheet, row, '❌ חסר שם מודעה'); return; }
@@ -439,8 +435,8 @@ function changeCampaignStatus(newStatus) {
   const sheet = ss.getSheetByName('קמפיינים');
   const row = sheet.getActiveCell().getRow();
   if (row < 2) return;
-  const campaignId = String(sheet.getRange(row, COL.OUT_CAMP_ID).getValue() || sheet.getRange(row, COL.CAMP_ID_EXISTING).getValue() || '').trim();
-  if (!campaignId) { setStatus(sheet, row, '❌ לא נמצא Campaign ID'); return; }
+  const campaignId = String(sheet.getRange(row, COL.OUT_CAMP_ID).getValue() || '').trim();
+  if (!campaignId) { setStatus(sheet, row, '❌ לא נמצא Campaign ID — יש להעלות תחילה'); return; }
   try {
     const resp = metaPost(campaignId, { status: newStatus });
     setStatus(sheet, row, resp.error ? '❌ ' + resp.error.message : (newStatus === 'PAUSED' ? '⏸ מושהה' : '▶️ פעיל'));
