@@ -439,7 +439,7 @@ function changeCampaignStatus(newStatus) {
   const sheet = ss.getSheetByName('קמפיינים');
   const row = sheet.getActiveCell().getRow();
   if (row < 2) return;
-  const campaignId = sheet.getRange(row, COL.OUT_CAMP_ID).getValue();
+  const campaignId = String(sheet.getRange(row, COL.OUT_CAMP_ID).getValue() || sheet.getRange(row, COL.CAMP_ID_EXISTING).getValue() || '').trim();
   if (!campaignId) { setStatus(sheet, row, '❌ לא נמצא Campaign ID'); return; }
   try {
     const resp = metaPost(campaignId, { status: newStatus });
