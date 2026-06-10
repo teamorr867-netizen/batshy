@@ -160,9 +160,15 @@ function setupSheets() {
   s.getRange(1, 1, 1, 4).setValues([['שם חשבון', 'Account ID', 'שם דף', 'Page ID']]);
   s.getRange(1, 1, 1, 4).setFontWeight('bold').setBackground('#4a4a8a').setFontColor('white');
 
-  const existingCamp = ss.getSheetByName('קמפיינים');
-  if (existingCamp) ss.deleteSheet(existingCamp);
-  s = ss.insertSheet('קמפיינים');
+  let campSheet = ss.getSheetByName('קמפיינים');
+  if (!campSheet) {
+    const fallback = ss.getSheetByName('גיליון1') || ss.getSheetByName('Sheet1');
+    if (fallback) { fallback.setName('קמפיינים'); campSheet = fallback; }
+    else campSheet = ss.insertSheet('קמפיינים');
+  } else {
+    campSheet.clear();
+  }
+  s = campSheet;
   const ch = ['שם קמפיין','מטרה','שם אד-סט','תקציב יומי (₪)','תאריך התחלה','תאריך סיום','Placement','מדינות לכלול','מדינות להחריג','ערים לכלול','ערים להחריג','גיל מינ','גיל מקס','מגדר','תחומי עניין','קהלים מותאמים','שם מודעה','כותרת','טקסט ראשי','URL יעד','URL תמונה','CTA','חשבון פרסום','דף','סטטוס','Campaign ID','Adset ID','Ad ID'];
   s.getRange(1, 1, 1, ch.length).setValues([ch]);
   s.getRange(1, 1, 1, ch.length).setFontWeight('bold').setBackground('#4a4a8a').setFontColor('white');
