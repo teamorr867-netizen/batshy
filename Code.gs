@@ -289,27 +289,34 @@ function uploadSelectedRow() {
   if (!pageId) { setStatus(sheet, row, '❌ לא נמצא דף: ' + values[COL.PAGE - 1]); return; }
   const accountEndpoint = actId(rawAccountId);
   try {
-    const campName = values[COL.CAMP_NAME - 1], objective = values[COL.OBJECTIVE - 1] || 'OUTCOME_TRAFFIC';
-    if (!campName) { setStatus(sheet, row, '❌ חסר שם קמפיין'); return; }
-    setStatus(sheet, row, '⏳ יוצר קמפיין...');
-    const campResp = metaPost(accountEndpoint + '/campaigns', { name: campName, objective: objective, status: 'PAUSED', special_ad_categories: '[]' });
-    if (campResp.error) { setStatus(sheet, row, '❌ ' + campResp.error.message); return; }
-    const campaignId = campResp.id;
-    sheet.getRange(row, COL.OUT_CAMP_ID).setValue(campaignId);
+    let campaignId = String(sheet.getRange(row, COL.OUT_CAMP_ID).getValue() || '').trim();
+    let adsetId = String(sheet.getRange(row, COL.OUT_ADSET_ID).getValue() || '').trim();
 
-    const adsetName = values[COL.ADSET_NAME - 1], dailyBudget = values[COL.DAILY_BUDGET - 1];
-    if (!adsetName) { setStatus(sheet, row, '❌ חסר שם אד-סט'); return; }
-    if (!dailyBudget) { setStatus(sheet, row, '❌ חסר תקציב יומי'); return; }
-    setStatus(sheet, row, '⏳ יוצר אד-סט...');
-    const adsetParams = { name: adsetName, campaign_id: campaignId, daily_budget: Math.round(parseFloat(dailyBudget) * 100), billing_event: 'IMPRESSIONS', optimization_goal: getOptimizationGoal(objective), targeting: JSON.stringify(buildTargeting(values)), status: 'PAUSED' };
-    const startTs = buildTimestamp(values[COL.START_DATE - 1], '00:00');
-    const endTs = buildTimestamp(values[COL.END_DATE - 1], '23:59');
-    if (startTs) adsetParams.start_time = startTs;
-    if (endTs) adsetParams.end_time = endTs;
-    const adsetResp = metaPost(accountEndpoint + '/adsets', adsetParams);
-    if (adsetResp.error) { setStatus(sheet, row, '❌ ' + adsetResp.error.message); return; }
-    const adsetId = adsetResp.id;
-    sheet.getRange(row, COL.OUT_ADSET_ID).setValue(adsetId);
+    if (!campaignId) {
+      const campName = values[COL.CAMP_NAME - 1], objective = values[COL.OBJECTIVE - 1] || 'OUTCOME_TRAFFIC';
+      if (!campName) { setStatus(sheet, row, '❌ חסר שם קמפיין'); return; }
+      setStatus(sheet, row, '⏳ יוצר קמפיין...');
+      const campResp = metaPost(accountEndpoint + '/campaigns', { name: campName, objective: objective, status: 'PAUSED', special_ad_categories: '[]' });
+      if (campResp.error) { setStatus(sheet, row, '❌ ' + campResp.error.message); return; }
+      campaignId = campResp.id;
+      sheet.getRange(row, COL.OUT_CAMP_ID).setValue(campaignId);
+    }
+
+    if (!adsetId) {
+      const adsetName = values[COL.ADSET_NAME - 1], dailyBudget = values[COL.DAILY_BUDGET - 1], objective = values[COL.OBJECTIVE - 1] || 'OUTCOME_TRAFFIC';
+      if (!adsetName) { setStatus(sheet, row, '❌ חסר שם אד-סט'); return; }
+      if (!dailyBudget) { setStatus(sheet, row, '❌ חסר תקציב יומי'); return; }
+      setStatus(sheet, row, '⏳ יוצר אד-סט...');
+      const adsetParams = { name: adsetName, campaign_id: campaignId, daily_budget: Math.round(parseFloat(dailyBudget) * 100), billing_event: 'IMPRESSIONS', optimization_goal: getOptimizationGoal(objective), targeting: JSON.stringify(buildTargeting(values)), status: 'PAUSED' };
+      const startTs = buildTimestamp(values[COL.START_DATE - 1], '00:00');
+      const endTs = buildTimestamp(values[COL.END_DATE - 1], '23:59');
+      if (startTs) adsetParams.start_time = startTs;
+      if (endTs) adsetParams.end_time = endTs;
+      const adsetResp = metaPost(accountEndpoint + '/adsets', adsetParams);
+      if (adsetResp.error) { setStatus(sheet, row, '❌ ' + adsetResp.error.message); return; }
+      adsetId = adsetResp.id;
+      sheet.getRange(row, COL.OUT_ADSET_ID).setValue(adsetId);
+    }
     const adName = values[COL.AD_NAME - 1], headline = values[COL.HEADLINE - 1], primaryText = values[COL.PRIMARY_TEXT - 1];
     const destUrl = values[COL.DEST_URL - 1], imageUrl = values[COL.IMAGE_URL - 1], cta = values[COL.CTA - 1] || 'LEARN_MORE';
     if (!adName) { setStatus(sheet, row, '❌ חסר שם מודעה'); return; }
