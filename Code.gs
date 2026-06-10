@@ -134,20 +134,7 @@ function setDupStatus(sheet, row, msg) {
   SpreadsheetApp.flush();
 }
 
-function onOpen() {
-  SpreadsheetApp.getUi()
-    .createMenu('Meta Ads')
-    .addItem('🚀 העלה שורה נבחרת', 'uploadSelectedRow')
-    .addSeparator()
-    .addItem('📋 שכפל קמפיין', 'duplicateCampaign')
-    .addSeparator()
-    .addItem('⏸ השהה קמפיין', 'pauseCampaign')
-    .addItem('▶️ הפעל קמפיין', 'activateCampaign')
-    .addSeparator()
-    .addItem('🔄 רענן רשימת חשבונות', 'refreshAccountsList')
-    .addItem('🔗 בדוק חיבור', 'testConnection')
-    .addToUi();
-}
+// onOpen מוגדר ב-Dashboard.gs ומכיל גם את תפריט Meta Ads וגם דשבורד
 
 function setupSheets() {
   const ss = SpreadsheetApp.getActiveSpreadsheet();
