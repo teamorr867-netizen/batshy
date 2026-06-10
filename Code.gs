@@ -342,17 +342,24 @@ function setupSheets() {
   acc.getRange(1,1,1,4).setFontWeight('bold').setBackground('#1a237e').setFontColor('white');
 
   // ── קמפיינים — מחפש גיליון קיים לשנות שם, אחרת יוצר ──
+  // ── קמפיינים ──
   var camp = ss.getSheetByName('קמפיינים');
   if (!camp) {
-    // נסה למצוא גיליון1 / Sheet1 לשינוי שם
-    camp = ss.getSheetByName('גיליון1') ||
-           ss.getSheetByName('גיליון 1') ||
-           ss.getSheetByName('Sheet1') ||
-           ss.getSheetByName('Sheet 1');
-    if (camp) {
-      camp.setName('קמפיינים');
-    } else {
-      camp = ss.insertSheet('קמפיינים');
+    // חפש גיליון פנוי לשינוי שם
+    var allSheets = ss.getSheets();
+    for (var si = 0; si < allSheets.length; si++) {
+      var sName = allSheets[si].getName();
+      if (sName.indexOf('גיליון') >= 0 || sName.indexOf('Sheet') >= 0) {
+        allSheets[si].setName('קמפיינים');
+        camp = allSheets[si];
+        break;
+      }
+    }
+    // אם לא נמצא — צור חדש ושנה שם
+    if (!camp) {
+      var newS = ss.insertSheet();
+      newS.setName('קמפיינים');
+      camp = newS;
     }
   }
   camp.clearContents();
