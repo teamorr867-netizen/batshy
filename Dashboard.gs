@@ -148,6 +148,7 @@ function renderDashboard(cfg, mappings, metaData, googleData, crmData, startStr,
   if (!dashSheet) dashSheet = ss.insertSheet(DASH.DASHBOARD_SHEET, 0);
   dashSheet.clearContents();
   dashSheet.clearFormats();
+  dashSheet.setRightToLeft(true);
 
   const today       = new Date();
   const start       = cfg.periodStart ? new Date(cfg.periodStart) : new Date(startStr);
@@ -476,11 +477,13 @@ function setupDashboardSheets() {
   s.setColumnWidth(1, 300);
   s.setColumnWidth(2, 500);
   s.getRange('B8:B9').setNumberFormat('dd/mm/yyyy');
+  s.setRightToLeft(true);
 
   // מיפוי קמפיינים
   let ms = ss.getSheetByName(DASH.MAPPING_SHEET);
   if (!ms) {
     ms = ss.insertSheet(DASH.MAPPING_SHEET);
+    ms.setRightToLeft(true);
     const headers = ['שם ערוץ (לדשבורד)', 'פלטפורמה', 'Campaign Name/ID', 'תקציב (₪)', 'סוג', 'ערוץ', 'לידים ידניים'];
     ms.getRange(1, 1, 1, headers.length).setValues([headers])
       .setFontWeight('bold').setBackground('#4a4a8a').setFontColor('white');
@@ -516,7 +519,9 @@ function setupDashboardSheets() {
 
   // צור דשבורד ריק
   if (!ss.getSheetByName(DASH.DASHBOARD_SHEET)) {
-    ss.insertSheet(DASH.DASHBOARD_SHEET, 0);
+    ss.insertSheet(DASH.DASHBOARD_SHEET, 0).setRightToLeft(true);
+  } else {
+    ss.getSheetByName(DASH.DASHBOARD_SHEET).setRightToLeft(true);
   }
 
   SpreadsheetApp.getUi().alert(

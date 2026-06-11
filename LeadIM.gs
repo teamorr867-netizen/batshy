@@ -128,6 +128,7 @@ function saveCRMSheet(leads, bySource) {
   let sheet = ss.getSheetByName(DASH.CRM_SHEET);
   if (!sheet) sheet = ss.insertSheet(DASH.CRM_SHEET);
   sheet.clearContents();
+  sheet.setRightToLeft(true);
 
   // Summary by source
   sheet.getRange(1, 1).setValue('סיכום לפי מקור — lead.im')
