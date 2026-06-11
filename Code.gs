@@ -19,18 +19,19 @@ var C = {
   AD_NAME:     12,  // שם מודעה
   HEADLINE:    13,  // כותרת
   TEXT:        14,  // טקסט ראשי
-  IMAGE_URL:   15,  // קישור לתמונה
-  DEST_URL:    16,  // קישור יעד
-  CTA:         17,  // LEARN_MORE וכו'
-  ACCOUNT:     18,  // חשבון פרסום
-  PAGE:        19,  // דף פייסבוק
+  IMAGE_URL:   15,  // תמונה ריבוע (פיד)
+  STORY_URL:   16,  // תמונה סטורי 9:16
+  DEST_URL:    17,  // קישור יעד
+  CTA:         18,  // LEARN_MORE וכו'
+  ACCOUNT:     19,  // חשבון פרסום
+  PAGE:        20,  // דף פייסבוק
   // פלט (ממולא אוטומטית):
-  STATUS:      20,
-  CAMP_ID:     21,
-  ADSET_ID:    22,
-  AD_ID:       23
+  STATUS:      21,
+  CAMP_ID:     22,
+  ADSET_ID:    23,
+  AD_ID:       24
 };
-var NCOLS = 23;
+var NCOLS = 24;
 
 // ─────────────────────────────────────────
 function actId(id) {
@@ -80,7 +81,7 @@ function getAccountId(name) {
       if (String(data[i][0]).trim() === name) return String(data[i][1]).trim();
     }
   }
-  return name; // אם לא נמצא — מחזיר כמו שהוא (יכול להיות ID ישיר)
+  return name;
 }
 
 // ─── חיפוש Page ID לפי שם ───
@@ -107,7 +108,7 @@ function placementTargeting(p) {
     'FACEBOOK_ONLY': { publisher_platforms: ['facebook'], facebook_positions: ['feed'] },
     'INSTAGRAM_ONLY':{ publisher_platforms: ['instagram'], instagram_positions: ['stream'] }
   };
-  return m[p] || {}; // AUTOMATIC = ריק
+  return m[p] || {};
 }
 
 // ─── Optimization Goal ───
@@ -131,6 +132,49 @@ function uploadImage(imageUrl, accountId) {
     if (keys.length) return r.images[keys[0]].hash;
   }
   throw new Error('שגיאה בתמונה: ' + JSON.stringify(r));
+}
+
+// ─── בניית creative עם שתי תמונות (ריבוע + סטורי) ───
+function buildCreativeMulti(acc, pageId, adName, headline, text, destUrl, cta, squareHash, storyHash) {
+  var images = [];
+  var rules  = [];
+
+  if (squareHash) {
+    images.push({ hash: squareHash, adlabels: [{ name: 'square' }] });
+    rules.push({
+      customization_spec: {
+        publisher_platforms: ['facebook','instagram'],
+        facebook_positions: ['feed'],
+        instagram_positions: ['stream']
+      },
+      image_label: { name: 'square' }
+    });
+  }
+  if (storyHash) {
+    images.push({ hash: storyHash, adlabels: [{ name: 'story' }] });
+    rules.push({
+      customization_spec: {
+        publisher_platforms: ['facebook','instagram'],
+        facebook_positions: ['story'],
+        instagram_positions: ['story']
+      },
+      image_label: { name: 'story' }
+    });
+  }
+
+  var assetFeedSpec = {
+    images: images,
+    titles: [{ text: headline || '' }],
+    bodies: [{ text: text || '' }],
+    link_urls: [{ website_url: destUrl }],
+    call_to_action_types: [cta],
+    asset_customization_rules: rules
+  };
+
+  return metaPost(acc + '/adcreatives', {
+    name: adName + '_creative',
+    asset_feed_spec: JSON.stringify(assetFeedSpec)
+  });
 }
 
 // ═══════════════════════════════════════════
@@ -158,7 +202,7 @@ function uploadRow() {
     // ── 1. קמפיין ──
     var campId = String(sheet.getRange(row, C.CAMP_ID).getValue() || '').trim();
     if (!campId) {
-      var campName = String(v[C.CAMP_NAME - 1] || '').trim();
+      var campName  = String(v[C.CAMP_NAME - 1] || '').trim();
       var objective = String(v[C.OBJECTIVE - 1] || 'OUTCOME_TRAFFIC').trim();
       if (!campName) { setStatus(sheet, row, '❌ חסר שם קמפיין'); return; }
       setStatus(sheet, row, '⏳ יוצר קמפיין...');
@@ -179,7 +223,6 @@ function uploadRow() {
       if (!adsetName) { setStatus(sheet, row, '❌ חסר שם אד-סט'); return; }
       if (!budget)    { setStatus(sheet, row, '❌ חסר תקציב יומי'); return; }
 
-      // targeting
       var targeting = {};
       var countries = String(v[C.COUNTRIES - 1] || 'IL').split(',').map(function(c){ return c.trim().toUpperCase(); }).filter(Boolean);
       targeting.geo_locations = { countries: countries };
@@ -214,34 +257,53 @@ function uploadRow() {
     }
 
     // ── 3. מודעה ──
-    var adName   = String(v[C.AD_NAME   - 1] || '').trim();
-    var headline = String(v[C.HEADLINE  - 1] || '').trim();
-    var text     = String(v[C.TEXT      - 1] || '').trim();
+    var adName   = String(v[C.AD_NAME  - 1] || '').trim();
+    var headline = String(v[C.HEADLINE - 1] || '').trim();
+    var text     = String(v[C.TEXT     - 1] || '').trim();
     var imageUrl = String(v[C.IMAGE_URL - 1] || '').trim();
+    var storyUrl = String(v[C.STORY_URL - 1] || '').trim();
     var destUrl  = String(v[C.DEST_URL  - 1] || '').trim();
     var cta      = String(v[C.CTA       - 1] || 'LEARN_MORE').trim();
 
-    if (!adName)   { setStatus(sheet, row, '❌ חסר שם מודעה'); return; }
-    if (!imageUrl) { setStatus(sheet, row, '❌ חסר URL תמונה'); return; }
-    if (!destUrl)  { setStatus(sheet, row, '❌ חסר URL יעד'); return; }
+    if (!adName)              { setStatus(sheet, row, '❌ חסר שם מודעה'); return; }
+    if (!imageUrl && !storyUrl) { setStatus(sheet, row, '❌ חסר URL תמונה'); return; }
+    if (!destUrl)             { setStatus(sheet, row, '❌ חסר URL יעד'); return; }
 
-    setStatus(sheet, row, '⏳ מעלה תמונה...');
-    var hash = uploadImage(imageUrl, accountRaw);
+    var squareHash = null;
+    var storyHash  = null;
+
+    if (imageUrl) {
+      setStatus(sheet, row, '⏳ מעלה תמונת ריבוע...');
+      squareHash = uploadImage(imageUrl, accountRaw);
+    }
+    if (storyUrl) {
+      setStatus(sheet, row, '⏳ מעלה תמונת סטורי...');
+      storyHash = uploadImage(storyUrl, accountRaw);
+    }
 
     setStatus(sheet, row, '⏳ יוצר creative...');
-    var creative = metaPost(acc + '/adcreatives', {
-      name: adName + '_creative',
-      object_story_spec: JSON.stringify({
-        page_id: pageId,
-        link_data: {
-          image_hash:    hash,
-          link:          destUrl,
-          message:       text,
-          name:          headline,
-          call_to_action: { type: cta, value: { link: destUrl } }
-        }
-      })
-    });
+    var creative;
+
+    if (squareHash && storyHash) {
+      // שתי תמונות — creative מותאם לכל placement
+      creative = buildCreativeMulti(acc, pageId, adName, headline, text, destUrl, cta, squareHash, storyHash);
+    } else {
+      // תמונה אחת — creative רגיל
+      creative = metaPost(acc + '/adcreatives', {
+        name: adName + '_creative',
+        object_story_spec: JSON.stringify({
+          page_id: pageId,
+          link_data: {
+            image_hash:    squareHash || storyHash,
+            link:          destUrl,
+            message:       text,
+            name:          headline,
+            call_to_action: { type: cta, value: { link: destUrl } }
+          }
+        })
+      });
+    }
+
     if (creative.error) { setStatus(sheet, row, '❌ Creative: ' + creative.error.message); return; }
 
     setStatus(sheet, row, '⏳ יוצר מודעה...');
@@ -262,7 +324,7 @@ function uploadRow() {
 // ═══════════════════════════════════════════
 //  השהה / הפעל קמפיין
 // ═══════════════════════════════════════════
-function pauseCampaign()  { toggleCampaign('PAUSED'); }
+function pauseCampaign()   { toggleCampaign('PAUSED'); }
 function activateCampaign(){ toggleCampaign('ACTIVE'); }
 
 function toggleCampaign(status) {
@@ -302,7 +364,6 @@ function refreshAccounts() {
   }
   if (rows.length) sh.getRange(2, 1, rows.length, 4).setValues(rows);
 
-  // עדכון dropdowns
   var campSheet = ss.getSheetByName('קמפיינים');
   if (campSheet) {
     if (accounts.length) campSheet.getRange(2, C.ACCOUNT, 200).setDataValidation(
@@ -346,11 +407,9 @@ function setupSheets() {
   acc.getRange(1, 2, 201, 1).setTextDirection(SpreadsheetApp.TextDirection.LEFT_TO_RIGHT);
   acc.getRange(1, 4, 201, 1).setTextDirection(SpreadsheetApp.TextDirection.LEFT_TO_RIGHT);
 
-  // ── קמפיינים — מחפש גיליון קיים לשנות שם, אחרת יוצר ──
   // ── קמפיינים ──
   var camp = ss.getSheetByName('קמפיינים');
   if (!camp) {
-    // חפש גיליון פנוי לשינוי שם
     var allSheets = ss.getSheets();
     for (var si = 0; si < allSheets.length; si++) {
       var sName = allSheets[si].getName();
@@ -360,7 +419,6 @@ function setupSheets() {
         break;
       }
     }
-    // אם לא נמצא — צור חדש ושנה שם
     if (!camp) {
       var newS = ss.insertSheet();
       newS.setName('קמפיינים');
@@ -371,7 +429,9 @@ function setupSheets() {
   var headers = [
     'שם קמפיין','מטרה','שם אד-סט','תקציב יומי (₪)','תאריך התחלה','תאריך סיום',
     'מדינות','גיל מינ','גיל מקס','מגדר','Placement',
-    'שם מודעה','כותרת','טקסט','URL תמונה','URL יעד','CTA',
+    'שם מודעה','כותרת','טקסט',
+    'URL ריבוע (פיד)','URL סטורי (9:16)',
+    'URL יעד','CTA',
     'חשבון פרסום','דף',
     'סטטוס','Campaign ID','Adset ID','Ad ID'
   ];
@@ -379,17 +439,17 @@ function setupSheets() {
   camp.getRange(1,1,1,headers.length).setFontWeight('bold').setBackground('#1a237e').setFontColor('white');
   camp.setFrozenRows(1);
 
-  // ── כיוון טקסט: RTL לעברית, LTR לעמודות URL ו-ID ──
+  // ── כיוון טקסט ──
   camp.getRange(1, 1, 201, NCOLS).setTextDirection(SpreadsheetApp.TextDirection.RIGHT_TO_LEFT);
-  camp.getRange(1, C.IMAGE_URL, 201, 1).setTextDirection(SpreadsheetApp.TextDirection.LEFT_TO_RIGHT);
+  camp.getRange(1, C.IMAGE_URL, 201, 2).setTextDirection(SpreadsheetApp.TextDirection.LEFT_TO_RIGHT);
   camp.getRange(1, C.DEST_URL,  201, 1).setTextDirection(SpreadsheetApp.TextDirection.LEFT_TO_RIGHT);
-  camp.getRange(1, C.CAMP_ID,  201, 4).setTextDirection(SpreadsheetApp.TextDirection.LEFT_TO_RIGHT);
+  camp.getRange(1, C.CAMP_ID,  201, 3).setTextDirection(SpreadsheetApp.TextDirection.LEFT_TO_RIGHT);
 
-  // צבע עמודות פלט
+  // ── צבע עמודות פלט ──
   camp.getRange(1, C.STATUS, 1, 4).setBackground('#e8f5e9');
   camp.getRange(2, C.STATUS, 200, 4).setBackground('#f1f8e9');
 
-  // Dropdowns סטטיים
+  // ── Dropdowns ──
   camp.getRange(2, C.OBJECTIVE, 200).setDataValidation(
     SpreadsheetApp.newDataValidation().requireValueInList(
       ['OUTCOME_TRAFFIC','OUTCOME_AWARENESS','OUTCOME_ENGAGEMENT','OUTCOME_LEADS','OUTCOME_SALES','OUTCOME_APP_PROMOTION'], true).build());
@@ -402,7 +462,7 @@ function setupSheets() {
     SpreadsheetApp.newDataValidation().requireValueInList(
       ['LEARN_MORE','SHOP_NOW','SIGN_UP','CONTACT_US','GET_QUOTE','DOWNLOAD','SUBSCRIBE','WATCH_MORE'], true).build());
 
-  SpreadsheetApp.getUi().alert('✅ הגיליונות נוצרו!\n\nעכשיו:\n1. הכנס Access Token בגיליון "הגדרות" תא B1\n2. לחץ Meta Ads → רענן חשבונות\n3. מלא נתונים ולחץ "העלה שורה"');
+  SpreadsheetApp.getUi().alert('✅ הגיליונות נוצרו!\n\nעכשיו:\n1. הכנס Access Token בגיליון "הגדרות" תא B1\n2. לחץ Meta Ads ← רענן חשבונות\n3. מלא נתונים ולחץ "העלה שורה"');
 }
 
 // ═══════════════════════════════════════════
