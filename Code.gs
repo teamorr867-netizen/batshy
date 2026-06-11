@@ -335,11 +335,16 @@ function setupSheets() {
   cfg.getRange('A1').setValue('Meta Access Token:').setFontWeight('bold');
   cfg.setColumnWidth(1, 180);
   cfg.setColumnWidth(2, 600);
+  cfg.getRange('A1:A100').setTextDirection(SpreadsheetApp.TextDirection.RIGHT_TO_LEFT);
+  cfg.getRange('B1').setTextDirection(SpreadsheetApp.TextDirection.LEFT_TO_RIGHT);
 
   // ── חשבונות ──
   var acc = ss.getSheetByName('חשבונות') || ss.insertSheet('חשבונות');
   acc.getRange(1,1,1,4).setValues([['שם חשבון','Account ID','שם דף','Page ID']]);
   acc.getRange(1,1,1,4).setFontWeight('bold').setBackground('#1a237e').setFontColor('white');
+  acc.getRange(1, 1, 201, 4).setTextDirection(SpreadsheetApp.TextDirection.RIGHT_TO_LEFT);
+  acc.getRange(1, 2, 201, 1).setTextDirection(SpreadsheetApp.TextDirection.LEFT_TO_RIGHT);
+  acc.getRange(1, 4, 201, 1).setTextDirection(SpreadsheetApp.TextDirection.LEFT_TO_RIGHT);
 
   // ── קמפיינים — מחפש גיליון קיים לשנות שם, אחרת יוצר ──
   // ── קמפיינים ──
@@ -373,6 +378,12 @@ function setupSheets() {
   camp.getRange(1,1,1,headers.length).setValues([headers]);
   camp.getRange(1,1,1,headers.length).setFontWeight('bold').setBackground('#1a237e').setFontColor('white');
   camp.setFrozenRows(1);
+
+  // ── כיוון טקסט: RTL לעברית, LTR לעמודות URL ו-ID ──
+  camp.getRange(1, 1, 201, NCOLS).setTextDirection(SpreadsheetApp.TextDirection.RIGHT_TO_LEFT);
+  camp.getRange(1, C.IMAGE_URL, 201, 1).setTextDirection(SpreadsheetApp.TextDirection.LEFT_TO_RIGHT);
+  camp.getRange(1, C.DEST_URL,  201, 1).setTextDirection(SpreadsheetApp.TextDirection.LEFT_TO_RIGHT);
+  camp.getRange(1, C.CAMP_ID,  201, 4).setTextDirection(SpreadsheetApp.TextDirection.LEFT_TO_RIGHT);
 
   // צבע עמודות פלט
   camp.getRange(1, C.STATUS, 1, 4).setBackground('#e8f5e9');
