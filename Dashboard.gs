@@ -1,32 +1,32 @@
 // ===== Dashboard.gs =====
-// מדביקים קובץ זה בשיטס של הדיווח (לא בשיטס של יצירת קמפיינים)
+// טאב נפרד לכל פרויקט; בתוך כל טאב 3 סקשנים: חודש / אתמול / היום
+//
 // שלבים:
 //   1. פתח שיטס הדיווח → Extensions → Apps Script
-//   2. צור קובץ חדש בשם "Dashboard"
-//   3. הדבק קוד זה → שמור
-//   4. הרץ פונקציה: setupDashboard
-//   5. אשר הרשאות גוגל
-//   6. 3 טאבים נפתחים: דשבורד - חודש | דשבורד - אתמול | דשבורד - היום
+//   2. צור קובץ חדש "Dashboard" → הדבק → שמור
+//   3. הרץ: setupDashboard
+//   4. אשר הרשאות
 
 // ═══════════════════════════════════════════
-//  קונפיגורציה — ערכי ברירת מחדל ראשוניים
-//  (אחרי הרצה ראשונה עורכים ישירות בתאים הצהובים בשיטס)
+//  קונפיגורציה — הוסף פרויקטים כאן
 // ═══════════════════════════════════════════
 
-// שורות לפי פרויקט: הוסף כאן שורות לשאר הפרויקטים כשתהיה מוכנה
-// { project, media, channel, budget }
+// כל שורה = ערוץ אחד בתוך פרויקט
+// גוגל: הוצאה + לידים נשלפים אוטומטית לפי ערוץ
+// פייסבוק: תאים צהובים לעדכון ידני
 var DASH_CONFIG = [
   { project: "מיסדאון", media: "גוגל",    channel: "מותג",      budget: 4500  },
   { project: "מיסדאון", media: "גוגל",    channel: "גנרי",      budget: 2500  },
   { project: "מיסדאון", media: "פייסבוק", channel: "דף נחיתה",  budget: 15000 },
   { project: "מיסדאון", media: "פייסבוק", channel: "טופס ליד",  budget: 38383 }
-  // דוגמה לפרויקט נוסף (הסר // כשתוסיף):
+
+  // הוסף פרויקטים נוספים כאן אחרי פסיק:
   // { project: "בית הנערה", media: "גוגל",    channel: "מותג",     budget: 0 },
   // { project: "בית הנערה", media: "פייסבוק", channel: "טופס ליד", budget: 0 }
 ];
 
-// ערכים ראשוניים לפייסבוק — project|channel → [הוצאה, לידים]
-// (עדכן ידנית בתאים הצהובים; ריצה מחדש של setupDashboard ישמור ערכים קיימים)
+// ערכי פייסבוק ראשוניים — project|channel → [הוצאה, לידים]
+// (לפי 3 תקופות זמן)
 var FB_DEFAULTS = {
   "חודש": {
     "מיסדאון|דף נחיתה": [13482, 15],
@@ -42,159 +42,226 @@ var FB_DEFAULTS = {
   }
 };
 
+// שמות טאבי גוגל אדס (לא לשנות אם הסקריפט כבר עובד)
+var GOOGLE_TABS = {
+  "חודש":  "מתחילת החודש עד אתמול",
+  "אתמול": "סטטוס אתמול",
+  "היום":  "סטטוס היום"
+};
+
+var PERIODS = ["חודש", "אתמול", "היום"];
+
+var PERIOD_LABELS = {
+  "חודש":  "מתחילת החודש עד אתמול",
+  "אתמול": "סטטוס אתמול",
+  "היום":  "סטטוס היום"
+};
+
 // ═══════════════════════════════════════════
 //  פונקציה ראשית
 // ═══════════════════════════════════════════
 function setupDashboard() {
   var ss = SpreadsheetApp.getActiveSpreadsheet();
-  _buildTab(ss, "דשבורד - חודש",  "מתחילת החודש עד אתמול", "חודש");
-  _buildTab(ss, "דשבורד - אתמול", "סטטוס אתמול",           "אתמול");
-  _buildTab(ss, "דשבורד - היום",  "סטטוס היום",             "היום");
+
+  // מצא את כל הפרויקטים הייחודיים (לפי סדר הופעה)
+  var projects = [];
+  DASH_CONFIG.forEach(function(r) {
+    if (projects.indexOf(r.project) === -1) projects.push(r.project);
+  });
+
+  projects.forEach(function(proj) {
+    _buildProjectTab(ss, proj);
+  });
+
   SpreadsheetApp.getUi().alert(
-    "✅ הדשבורד נוצר בהצלחה!\n\n" +
-    "3 טאבים:\n" +
-    "• דשבורד - חודש (מתחילת החודש עד אתמול)\n" +
-    "• דשבורד - אתמול\n" +
-    "• דשבורד - היום\n\n" +
-    "תאים צהובים = עדכון ידני (תקציב + פייסבוק)\n" +
-    "תאים לבנים = חישוב אוטומטי"
+    "✅ הדשבורד נוצר!\n\n" +
+    "טאב לכל פרויקט עם 3 סקשנים:\n" +
+    "• מתחילת החודש עד אתמול\n" +
+    "• סטטוס אתמול\n" +
+    "• סטטוס היום\n\n" +
+    "🟡 תאים צהובים = עדכון ידני\n" +
+    "🟢 תאים ירוקים = אוטומטי מגוגל"
   );
 }
 
 // ═══════════════════════════════════════════
-//  בניית טאב דשבורד
+//  בניית טאב פרויקט
 // ═══════════════════════════════════════════
-function _buildTab(ss, tabName, googleSrcTab, fbKey) {
-  var sh = ss.getSheetByName(tabName);
-  if (!sh) sh = ss.insertSheet(tabName);
+function _buildProjectTab(ss, project) {
+  var sh = ss.getSheetByName(project);
+  if (!sh) sh = ss.insertSheet(project);
 
-  // --- שמור ערכים קיימים לפני ניקוי ---
-  var savedValues = {}; // key: "project|media|channel" → { budget, fbSpend, fbLeads }
-  if (sh.getLastRow() > 1) {
-    var existing = sh.getRange(2, 1, sh.getLastRow() - 1, 9).getValues();
-    existing.forEach(function(row) {
-      var key = row[0] + "|" + row[1] + "|" + row[2];
-      savedValues[key] = {
-        budget:   row[3],
-        fbSpend:  row[1] === "פייסבוק" ? row[4] : null,
-        fbLeads:  row[1] === "פייסבוק" ? row[7] : null
-      };
-    });
-  }
+  // שמור ערכים צהובים קיימים לפני ניקוי
+  var saved = _saveYellowValues(sh);
 
-  // --- ניקוי ובניה מחדש ---
   sh.clearContents();
   sh.clearFormats();
   sh.setRightToLeft(true);
 
-  // כותרות
-  var COLS = ["פרויקט", "מדיה", "ערוץ", "תקציב ₪", "הוצאה ₪", "% ניצול", "יתרה ₪", "לידים", "עלות לליד ₪"];
-  var headerRange = sh.getRange(1, 1, 1, COLS.length);
-  headerRange.setValues([COLS]);
-  headerRange.setBackground("#1a73e8").setFontColor("#ffffff").setFontWeight("bold").setHorizontalAlignment("center");
-  sh.setFrozenRows(1);
+  var COLS = ["מדיה", "ערוץ", "תקציב ₪", "הוצאה ₪", "% ניצול", "יתרה ₪", "לידים", "עלות לליד ₪"];
+  var currentRow = 1;
 
-  var fbData    = FB_DEFAULTS[fbKey] || {};
-  var dataRow   = 2;
-  var lastProj  = "";
+  // שורות של הפרויקט הזה בלבד
+  var projectRows = DASH_CONFIG.filter(function(r) { return r.project === project; });
 
-  DASH_CONFIG.forEach(function(cfg) {
-    var r        = dataRow;
-    var isGoogle = cfg.media === "גוגל";
-    var saveKey  = cfg.project + "|" + cfg.media + "|" + cfg.channel;
-    var fbKey2   = cfg.project + "|" + cfg.channel;
-    var saved    = savedValues[saveKey] || {};
+  PERIODS.forEach(function(period) {
+    var googleSrcTab = GOOGLE_TABS[period];
+    var fbData = FB_DEFAULTS[period] || {};
 
-    // --- עמודות קבועות (טקסט) ---
-    sh.getRange(r, 1).setValue(cfg.project);
-    sh.getRange(r, 2).setValue(cfg.media);
-    sh.getRange(r, 3).setValue(cfg.channel);
+    // ─── כותרת הסקשן ───
+    var titleRange = sh.getRange(currentRow, 1, 1, COLS.length);
+    titleRange.merge();
+    titleRange.setValue(PERIOD_LABELS[period]);
+    titleRange.setBackground("#1a73e8")
+              .setFontColor("#ffffff")
+              .setFontWeight("bold")
+              .setFontSize(12)
+              .setHorizontalAlignment("center");
+    currentRow++;
 
-    // --- תקציב (D) — תא צהוב לעדכון ידני ---
-    var budgetVal = (saved.budget != null && saved.budget !== "") ? saved.budget : cfg.budget;
-    sh.getRange(r, 4)
-      .setValue(budgetVal)
-      .setBackground("#fff9c4")
-      .setNumberFormat("₪#,##0");
+    // ─── כותרות עמודות ───
+    var headerRange = sh.getRange(currentRow, 1, 1, COLS.length);
+    headerRange.setValues([COLS]);
+    headerRange.setBackground("#e8f0fe")
+               .setFontWeight("bold")
+               .setHorizontalAlignment("center")
+               .setBorder(null, null, true, null, null, null, "#1a73e8", SpreadsheetApp.BorderStyle.SOLID);
+    currentRow++;
 
-    // --- הוצאה (E) ---
-    if (isGoogle) {
-      // אוטומטי מטאב גוגל אדס
+    var firstDataRow = currentRow;
+
+    // ─── שורות נתונים ───
+    projectRows.forEach(function(cfg) {
+      var r        = currentRow;
+      var isGoogle = cfg.media === "גוגל";
+      var fbKey    = cfg.project + "|" + cfg.channel;
+      var saveKey  = period + "|" + cfg.media + "|" + cfg.channel;
+
+      // עמודה A: מדיה
+      sh.getRange(r, 1).setValue(cfg.media);
+      // עמודה B: ערוץ
+      sh.getRange(r, 2).setValue(cfg.channel);
+
+      // עמודה C: תקציב — תא צהוב ידני
+      var budgetVal = (saved[saveKey + "|budget"] != null) ? saved[saveKey + "|budget"] : cfg.budget;
+      sh.getRange(r, 3).setValue(budgetVal)
+        .setBackground("#fff9c4")
+        .setNumberFormat("₪#,##0");
+
+      // עמודה D: הוצאה
+      if (isGoogle) {
+        sh.getRange(r, 4).setFormula(
+          "=IFERROR(SUMIFS('" + googleSrcTab + "'!D:D," +
+          "'" + googleSrcTab + "'!A:A,\"" + project + "\"," +
+          "'" + googleSrcTab + "'!C:C,B" + r + "),0)"
+        ).setBackground("#e8f5e9").setNumberFormat("₪#,##0");
+      } else {
+        var defSpend = fbData[fbKey] ? fbData[fbKey][0] : 0;
+        var spendVal = (saved[saveKey + "|spend"] != null) ? saved[saveKey + "|spend"] : defSpend;
+        sh.getRange(r, 4).setValue(spendVal)
+          .setBackground("#fff9c4")
+          .setNumberFormat("₪#,##0");
+      }
+
+      // עמודה E: % ניצול
       sh.getRange(r, 5).setFormula(
-        "=IFERROR(SUMIFS('" + googleSrcTab + "'!D:D," +
-        "'" + googleSrcTab + "'!A:A,A" + r + "," +
-        "'" + googleSrcTab + "'!C:C,C" + r + "),0)"
-      ).setBackground("#e8f5e9"); // ירוק בהיר = אוטומטי
-    } else {
-      // פייסבוק — תא צהוב ידני
-      var defaultSpend = fbData[fbKey2] ? fbData[fbKey2][0] : 0;
-      var spendVal = (saved.fbSpend != null && saved.fbSpend !== "") ? saved.fbSpend : defaultSpend;
-      sh.getRange(r, 5).setValue(spendVal).setBackground("#fff9c4");
-    }
-    sh.getRange(r, 5).setNumberFormat("₪#,##0");
+        '=IF(AND(C' + r + '>0,D' + r + '>0),TEXT(D' + r + '/C' + r + ',"0%"),"-")'
+      ).setHorizontalAlignment("center");
 
-    // --- % ניצול (F) — נוסחה ---
-    sh.getRange(r, 6).setFormula(
-      '=IF(AND(D' + r + '>0,E' + r + '>0),TEXT(E' + r + '/D' + r + ',"0%"),"-")'
-    ).setHorizontalAlignment("center");
+      // עמודה F: יתרה
+      sh.getRange(r, 6).setFormula("=C" + r + "-D" + r)
+        .setNumberFormat("₪#,##0");
 
-    // --- יתרה (G) — נוסחה ---
-    sh.getRange(r, 7).setFormula("=D" + r + "-E" + r).setNumberFormat("₪#,##0");
+      // עמודה G: לידים
+      if (isGoogle) {
+        sh.getRange(r, 7).setFormula(
+          "=IFERROR(SUMIFS('" + googleSrcTab + "'!E:E," +
+          "'" + googleSrcTab + "'!A:A,\"" + project + "\"," +
+          "'" + googleSrcTab + "'!C:C,B" + r + "),0)"
+        ).setBackground("#e8f5e9");
+      } else {
+        var defLeads = fbData[fbKey] ? fbData[fbKey][1] : 0;
+        var leadsVal = (saved[saveKey + "|leads"] != null) ? saved[saveKey + "|leads"] : defLeads;
+        sh.getRange(r, 8).setValue(leadsVal)
+          .setBackground("#fff9c4");
+      }
 
-    // --- לידים (H) ---
-    if (isGoogle) {
+      // עמודה H: עלות לליד
+      sh.getRange(r, 8 + (isGoogle ? 0 : 0));  // placeholder
       sh.getRange(r, 8).setFormula(
-        "=IFERROR(SUMIFS('" + googleSrcTab + "'!E:E," +
-        "'" + googleSrcTab + "'!A:A,A" + r + "," +
-        "'" + googleSrcTab + "'!C:C,C" + r + "),0)"
-      ).setBackground("#e8f5e9");
-    } else {
-      var defaultLeads = fbData[fbKey2] ? fbData[fbKey2][1] : 0;
-      var leadsVal = (saved.fbLeads != null && saved.fbLeads !== "") ? saved.fbLeads : defaultLeads;
-      sh.getRange(r, 8).setValue(leadsVal).setBackground("#fff9c4");
-    }
+        '=IF(G' + r + '>0,ROUND(D' + r + '/G' + r + ',0),"-")'
+      ).setNumberFormat("₪#,##0").setHorizontalAlignment("center");
 
-    // --- עלות לליד (I) — נוסחה ---
-    sh.getRange(r, 9).setFormula(
-      '=IF(H' + r + '>0,ROUND(E' + r + '/H' + r + ',0),"-")'
-    ).setNumberFormat("₪#,##0").setHorizontalAlignment("center");
+      // צבע שורה גוגל
+      if (isGoogle) {
+        sh.getRange(r, 1, 1, 2).setBackground("#e8f5e9");
+      }
 
-    // קו מפריד בין פרויקטים שונים
-    if (lastProj && lastProj !== cfg.project) {
-      sh.getRange(r, 1, 1, COLS.length).setBorder(
-        true, null, null, null, null, null,
-        "#1a73e8", SpreadsheetApp.BorderStyle.SOLID_MEDIUM
-      );
-    }
-    lastProj = cfg.project;
-    dataRow++;
+      currentRow++;
+    });
+
+    // ─── שורת סיכום ───
+    var tr = currentRow;
+    var lastData = currentRow - 1;
+    sh.getRange(tr, 1, 1, COLS.length).setBackground("#1a73e8").setFontColor("#ffffff").setFontWeight("bold");
+    sh.getRange(tr, 1).setValue('סה"כ').setFontColor("#ffffff");
+    sh.getRange(tr, 3).setFormula("=SUM(C" + firstDataRow + ":C" + lastData + ")").setNumberFormat("₪#,##0");
+    sh.getRange(tr, 4).setFormula("=SUM(D" + firstDataRow + ":D" + lastData + ")").setNumberFormat("₪#,##0");
+    sh.getRange(tr, 5).setFormula(
+      '=IF(C' + tr + '>0,TEXT(D' + tr + '/C' + tr + ',"0%"),"-")'
+    ).setHorizontalAlignment("center").setFontColor("#ffffff");
+    sh.getRange(tr, 6).setFormula("=C" + tr + "-D" + tr).setNumberFormat("₪#,##0");
+    sh.getRange(tr, 7).setFormula("=SUM(G" + firstDataRow + ":G" + lastData + ")");
+    sh.getRange(tr, 8).setFormula(
+      '=IF(G' + tr + '>0,ROUND(D' + tr + '/G' + tr + ',0),"-")'
+    ).setNumberFormat("₪#,##0").setFontColor("#ffffff");
+    currentRow++;
+
+    // ─── רווח בין סקשנים ───
+    currentRow++;
   });
 
-  // --- שורת סיכום ---
-  var tr = dataRow;
-  var lastData = dataRow - 1;
-  var sumRange = sh.getRange(tr, 1, 1, COLS.length);
-  sumRange.setBackground("#1a73e8").setFontColor("#ffffff").setFontWeight("bold");
-  sh.getRange(tr, 3).setValue('סה"כ').setFontColor("#ffffff");
-  sh.getRange(tr, 4).setFormula("=SUM(D2:D" + lastData + ")").setNumberFormat("₪#,##0");
-  sh.getRange(tr, 5).setFormula("=SUM(E2:E" + lastData + ")").setNumberFormat("₪#,##0");
-  sh.getRange(tr, 6).setFormula(
-    '=IF(D' + tr + '>0,TEXT(E' + tr + '/D' + tr + ',"0%"),"-")'
-  ).setHorizontalAlignment("center").setFontColor("#ffffff");
-  sh.getRange(tr, 7).setFormula("=D" + tr + "-E" + tr).setNumberFormat("₪#,##0");
-  sh.getRange(tr, 8).setFormula("=SUM(H2:H" + lastData + ")");
-  sh.getRange(tr, 9).setFormula(
-    '=IF(H' + tr + '>0,ROUND(E' + tr + '/H' + tr + ',0),"-")'
-  ).setNumberFormat("₪#,##0").setFontColor("#ffffff");
+  // ─── רוחב עמודות ───
+  sh.setColumnWidth(1, 100); // מדיה
+  sh.setColumnWidth(2, 110); // ערוץ
+  sh.setColumnWidth(3, 110); // תקציב
+  sh.setColumnWidth(4, 110); // הוצאה
+  sh.setColumnWidth(5, 90);  // %
+  sh.setColumnWidth(6, 110); // יתרה
+  sh.setColumnWidth(7, 80);  // לידים
+  sh.setColumnWidth(8, 120); // עלות לליד
+}
 
-  // --- עיצוב עמודות ---
-  sh.setColumnWidth(1, 120); // פרויקט
-  sh.setColumnWidth(2, 90);  // מדיה
-  sh.setColumnWidth(3, 100); // ערוץ
-  sh.setColumnWidth(4, 100); // תקציב
-  sh.setColumnWidth(5, 100); // הוצאה
-  sh.setColumnWidth(6, 80);  // %
-  sh.setColumnWidth(7, 100); // יתרה
-  sh.setColumnWidth(8, 70);  // לידים
-  sh.setColumnWidth(9, 110); // עלות לליד
+// ─── שמור ערכים צהובים ─────────────────────
+function _saveYellowValues(sh) {
+  var saved = {};
+  if (sh.getLastRow() < 2) return saved;
+
+  // קרא את הפרויקט מהמטה-דאטה של הטאב
+  // סרוק את כל השורות ושמור לפי מפתח
+  var lastRow = sh.getLastRow();
+  var data    = sh.getRange(1, 1, lastRow, 8).getValues();
+  var bgData  = sh.getRange(1, 1, lastRow, 8).getBackgrounds();
+
+  var currentPeriod = "";
+  for (var i = 0; i < data.length; i++) {
+    var row  = data[i];
+    var bgs  = bgData[i];
+    var cell = String(row[0] || "");
+
+    // זהה כותרת סקשן
+    if (cell === "מתחילת החודש עד אתמול") { currentPeriod = "חודש"; continue; }
+    if (cell === "סטטוס אתמול")           { currentPeriod = "אתמול"; continue; }
+    if (cell === "סטטוס היום")            { currentPeriod = "היום"; continue; }
+    if (!row[0] || !row[1])               continue;
+
+    var media   = String(row[0]);
+    var channel = String(row[1]);
+    var key     = currentPeriod + "|" + media + "|" + channel;
+
+    if (bgs[2] === "#fff9c4" && row[2] !== "") saved[key + "|budget"] = row[2]; // תקציב
+    if (bgs[3] === "#fff9c4" && row[3] !== "") saved[key + "|spend"]  = row[3]; // הוצאה FB
+    if (bgs[6] === "#fff9c4" && row[6] !== "") saved[key + "|leads"]  = row[6]; // לידים FB
+  }
+  return saved;
 }
