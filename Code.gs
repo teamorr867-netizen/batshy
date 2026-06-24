@@ -409,5 +409,179 @@ function onOpen() {
     .addItem('🔗 בדוק חיבור', 'testConnection')
     .addSeparator()
     .addItem('⚙️ בנה גיליונות (setupSheets)', 'setupSheets')
+    .addSeparator()
+    .addItem('📊 בנה דשבורד ביצועים', 'setupDashboard')
     .addToUi();
+}
+
+// ═══════════════════════════════════════════
+//  דשבורד ביצועים — קונפיגורציה
+// ═══════════════════════════════════════════
+var REPORTS_SHEET_ID = "1mAlhNPZnIp6wvavmwv5BPB0XMFLUiFkABO35XmKu9Ac";
+
+// שורות הדשבורד לפי פרויקט (מדיה + ערוץ)
+// גוגל: מושך אוטומטית מהטאבים של סקריפט גוגל אדס
+// פייסבוק: תאים צהובים לעדכון ידני
+var DASH_ROWS = [
+  { project: "מיסדאון", media: "גוגל",    channel: "מותג"     },
+  { project: "מיסדאון", media: "גוגל",    channel: "גנרי"     },
+  { project: "מיסדאון", media: "פייסבוק", channel: "דף נחיתה" },
+  { project: "מיסדאון", media: "פייסבוק", channel: "טופס ליד" }
+];
+
+// תקציבים חודשיים: [פרויקט, מדיה, ערוץ, תקציב]
+var BUDGETS_DATA = [
+  ["מיסדאון", "גוגל",    "מותג",      4500 ],
+  ["מיסדאון", "גוגל",    "גנרי",      2500 ],
+  ["מיסדאון", "פייסבוק", "דף נחיתה",  15000],
+  ["מיסדאון", "פייסבוק", "טופס ליד",  38383]
+];
+
+// נתוני פייסבוק ראשוניים (עדכן ידנית בתאים הצהובים בשיטס)
+// project|channel → [הוצאה, לידים]
+var FB_INITIAL = {
+  "חודש": {
+    "מיסדאון|דף נחיתה": [13482, 15],
+    "מיסדאון|טופס ליד": [24413, 56]
+  },
+  "אתמול": {
+    "מיסדאון|דף נחיתה": [498, 0],
+    "מיסדאון|טופס ליד": [2311, 9]
+  },
+  "היום": {
+    "מיסדאון|דף נחיתה": [155, 1],
+    "מיסדאון|טופס ליד": [632, 6]
+  }
+};
+
+// ═══════════════════════════════════════════
+//  בניית דשבורד ביצועים
+// ═══════════════════════════════════════════
+function setupDashboard() {
+  var ss = SpreadsheetApp.openById(REPORTS_SHEET_ID);
+  _createBudgetTab(ss);
+  _createDashTab(ss, "דשבורד - חודש",  "מתחילת החודש עד אתמול", "חודש");
+  _createDashTab(ss, "דשבורד - אתמול", "סטטוס אתמול",           "אתמול");
+  _createDashTab(ss, "דשבורד - היום",  "סטטוס היום",             "היום");
+  SpreadsheetApp.getUi().alert("✅ הדשבורד נוצר בהצלחה!\n\nנפתחו 4 טאבים חדשים:\n• תקציבים\n• דשבורד - חודש\n• דשבורד - אתמול\n• דשבורד - היום\n\nתאים צהובים = עדכון פייסבוק ידני");
+}
+
+function _createBudgetTab(ss) {
+  var sh = ss.getSheetByName("תקציבים");
+  if (!sh) sh = ss.insertSheet("תקציבים");
+  sh.clearContents();
+  sh.setRightToLeft(true);
+
+  sh.getRange(1, 1, 1, 4).setValues([["פרויקט", "מדיה", "ערוץ", "תקציב חודשי ₪"]])
+    .setBackground("#1a73e8").setFontColor("#ffffff").setFontWeight("bold");
+
+  sh.getRange(2, 1, BUDGETS_DATA.length, 4).setValues(BUDGETS_DATA);
+  sh.getRange(2, 4, BUDGETS_DATA.length, 1).setNumberFormat("₪#,##0");
+  sh.setFrozenRows(1);
+  sh.autoResizeColumns(1, 4);
+}
+
+function _createDashTab(ss, tabName, googleSrcTab, fbKey) {
+  var sh = ss.getSheetByName(tabName);
+  if (!sh) sh = ss.insertSheet(tabName);
+
+  // שמור ערכי פייסבוק קיימים לפני ניקוי
+  var savedFb = {};
+  if (sh.getLastRow() > 1) {
+    var existing = sh.getRange(2, 1, sh.getLastRow() - 1, 9).getValues();
+    existing.forEach(function(row) {
+      if (row[1] === "פייסבוק" && (row[4] || row[7])) {
+        savedFb[row[0] + "|" + row[2]] = [row[4], row[7]];
+      }
+    });
+  }
+
+  sh.clearContents();
+  sh.setRightToLeft(true);
+
+  var COLS = ["פרויקט", "מדיה", "ערוץ", "תקציב", "הוצאה", "% ניצול", "יתרה", "לידים", "עלות לליד"];
+  sh.getRange(1, 1, 1, COLS.length).setValues([COLS])
+    .setBackground("#1a73e8").setFontColor("#ffffff").setFontWeight("bold");
+  sh.setFrozenRows(1);
+
+  var fbData = FB_INITIAL[fbKey] || {};
+  var dataRow = 2;
+  var lastProject = "";
+
+  DASH_ROWS.forEach(function(cfg) {
+    var r       = dataRow;
+    var isGoogle = cfg.media === "גוגל";
+    var fbKey2  = cfg.project + "|" + cfg.channel;
+
+    // עמודות בסיס
+    sh.getRange(r, 1).setValue(cfg.project);
+    sh.getRange(r, 2).setValue(cfg.media);
+    sh.getRange(r, 3).setValue(cfg.channel);
+
+    // תקציב — SUMIFS מטאב תקציבים
+    sh.getRange(r, 4).setFormula(
+      "=IFERROR(SUMIFS('תקציבים'!D:D,'תקציבים'!A:A,A" + r + ",'תקציבים'!B:B,B" + r + ",'תקציבים'!C:C,C" + r + "),0)"
+    ).setNumberFormat("₪#,##0");
+
+    if (isGoogle) {
+      // הוצאה ולידים — SUMIFS מטאב גוגל
+      sh.getRange(r, 5).setFormula(
+        "=IFERROR(SUMIFS('" + googleSrcTab + "'!D:D,'" + googleSrcTab + "'!A:A,A" + r + ",'" + googleSrcTab + "'!C:C,C" + r + "),0)"
+      );
+      sh.getRange(r, 8).setFormula(
+        "=IFERROR(SUMIFS('" + googleSrcTab + "'!E:E,'" + googleSrcTab + "'!A:A,A" + r + ",'" + googleSrcTab + "'!C:C,C" + r + "),0)"
+      );
+    } else {
+      // פייסבוק — תא צהוב לעדכון ידני
+      var savedVals = savedFb[fbKey2] || fbData[fbKey2] || [0, 0];
+      sh.getRange(r, 5).setValue(savedVals[0]).setBackground("#fff9c4");
+      sh.getRange(r, 8).setValue(savedVals[1]).setBackground("#fff9c4");
+    }
+
+    sh.getRange(r, 5).setNumberFormat("₪#,##0");
+
+    // % ניצול
+    sh.getRange(r, 6).setFormula(
+      '=IF(AND(D' + r + '>0,E' + r + '>0),TEXT(E' + r + '/D' + r + ',"0%"),"-")'
+    );
+
+    // יתרה
+    sh.getRange(r, 7).setFormula("=D" + r + "-E" + r).setNumberFormat("₪#,##0");
+
+    // עלות לליד
+    sh.getRange(r, 9).setFormula(
+      '=IF(H' + r + '>0,ROUND(E' + r + '/H' + r + ',0),"-")'
+    ).setNumberFormat("₪#,##0");
+
+    // צבע שורה לפי מדיה
+    if (isGoogle) {
+      sh.getRange(r, 1, 1, COLS.length).setBackground("#e8f5e9"); // ירוק בהיר לגוגל
+    }
+
+    // קו מפריד בין פרויקטים
+    if (lastProject && lastProject !== cfg.project) {
+      sh.getRange(r, 1, 1, COLS.length).setBorder(true, null, null, null, null, null, "#666666", SpreadsheetApp.BorderStyle.SOLID_MEDIUM);
+    }
+    lastProject = cfg.project;
+
+    dataRow++;
+  });
+
+  // שורת סיכום
+  var tr = dataRow;
+  var lastDataRow = dataRow - 1;
+  sh.getRange(tr, 1, 1, COLS.length).setBackground("#1a73e8").setFontColor("#ffffff").setFontWeight("bold");
+  sh.getRange(tr, 3).setValue('סה"כ');
+  sh.getRange(tr, 4).setFormula("=SUM(D2:D" + lastDataRow + ")").setNumberFormat("₪#,##0");
+  sh.getRange(tr, 5).setFormula("=SUM(E2:E" + lastDataRow + ")").setNumberFormat("₪#,##0");
+  sh.getRange(tr, 6).setFormula(
+    '=IF(D' + tr + '>0,TEXT(E' + tr + '/D' + tr + ',"0%"),"-")'
+  );
+  sh.getRange(tr, 7).setFormula("=D" + tr + "-E" + tr).setNumberFormat("₪#,##0");
+  sh.getRange(tr, 8).setFormula("=SUM(H2:H" + lastDataRow + ")");
+  sh.getRange(tr, 9).setFormula(
+    '=IF(H' + tr + '>0,ROUND(E' + tr + '/H' + tr + ',0),"-")'
+  ).setNumberFormat("₪#,##0");
+
+  sh.autoResizeColumns(1, COLS.length);
 }
