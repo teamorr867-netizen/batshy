@@ -180,14 +180,12 @@ function _buildProjectTab(ss, project) {
           "'" + googleSrcTab + "'!C:C,B" + r + "),0)"
         ).setBackground("#e8f5e9");
       } else {
-        var defLeads = fbData[fbKey] ? fbData[fbKey][1] : 0;
-        var leadsVal = (saved[saveKey + "|leads"] != null) ? saved[saveKey + "|leads"] : defLeads;
-        sh.getRange(r, 8).setValue(leadsVal)
-          .setBackground("#fff9c4");
+        // COUNTIFS על טאב "לידים CRM" לפי פרויקט + ערוץ + טווח תאריכים
+        var crmFormula = _buildCrmCountifs(project, cfg.channel, period);
+        sh.getRange(r, 7).setFormula(crmFormula).setBackground("#e8f5e9");
       }
 
       // עמודה H: עלות לליד
-      sh.getRange(r, 8 + (isGoogle ? 0 : 0));  // placeholder
       sh.getRange(r, 8).setFormula(
         '=IF(G' + r + '>0,ROUND(D' + r + '/G' + r + ',0),"-")'
       ).setNumberFormat("₪#,##0").setHorizontalAlignment("center");
@@ -259,9 +257,37 @@ function _saveYellowValues(sh) {
     var channel = String(row[1]);
     var key     = currentPeriod + "|" + media + "|" + channel;
 
-    if (bgs[2] === "#fff9c4" && row[2] !== "") saved[key + "|budget"] = row[2]; // תקציב
-    if (bgs[3] === "#fff9c4" && row[3] !== "") saved[key + "|spend"]  = row[3]; // הוצאה FB
-    if (bgs[6] === "#fff9c4" && row[6] !== "") saved[key + "|leads"]  = row[6]; // לידים FB
+    if (bgs[2] === "#fff9c4" && row[2] !== "") saved[key + "|budget"] = row[2];
+    if (bgs[3] === "#fff9c4" && row[3] !== "") saved[key + "|spend"]  = row[3];
   }
   return saved;
+}
+
+// ─── נוסחת COUNTIFS על טאב לידים CRM ──────────
+// עמודות: A=תאריך, B=פרויקט, C=מדיה, D=ערוץ
+function _buildCrmCountifs(project, channel, period) {
+  var crm = "לידים CRM";
+  var dateFilter = "";
+  if (period === "חודש") {
+    dateFilter =
+      ',">=",DATE(YEAR(TODAY()),MONTH(TODAY()),1),' +
+      "'לידים CRM'!A:A,\"<=\",TODAY()-1";
+  } else if (period === "אתמול") {
+    dateFilter =
+      ',">=",TODAY()-1,' +
+      "'לידים CRM'!A:A,\"<=\",TODAY()-1";
+  } else {
+    // היום
+    dateFilter =
+      ',">=",TODAY(),' +
+      "'לידים CRM'!A:A,\"<=\",TODAY()";
+  }
+
+  return (
+    "=IFERROR(COUNTIFS(" +
+      "'" + crm + "'!B:B,\"" + project + "\"," +
+      "'" + crm + "'!D:D,\"" + channel + "\"," +
+      "'" + crm + "'!A:A" + dateFilter +
+    "),0)"
+  );
 }
