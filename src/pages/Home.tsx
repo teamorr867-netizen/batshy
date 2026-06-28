@@ -2,13 +2,11 @@ import type { Page } from '../App'
 
 const BUBBLES = [
   {
-    id: 'yield' as Page,
+    id: 'leads' as Page,
     icon: (
       <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
-        <rect x="3" y="3" width="22" height="22" rx="4" stroke="#B8956A" strokeWidth="1.5"/>
-        <rect x="6" y="6" width="7" height="16" rx="1.5" fill="#B8956A" fillOpacity="0.15" stroke="#B8956A" strokeWidth="1.2"/>
-        <rect x="15" y="10" width="7" height="12" rx="1.5" fill="#B8956A" fillOpacity="0.15" stroke="#B8956A" strokeWidth="1.2"/>
-        <path d="M6 20 L10 14 L15 17 L22 9" stroke="#B8956A" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/>
+        <circle cx="14" cy="10" r="5" stroke="#B8956A" strokeWidth="1.5"/>
+        <path d="M5 24c0-5 4-8 9-8s9 3 9 8" stroke="#B8956A" strokeWidth="1.5" strokeLinecap="round"/>
       </svg>
     ),
     title: 'ניהול דירות ולקוחות',
@@ -16,7 +14,7 @@ const BUBBLES = [
     desc: 'אנחנו מטפלים בדיירים, תשלומים, מעקב ופניות.',
   },
   {
-    id: 'mortgage' as Page,
+    id: 'calcs-hub' as Page,
     icon: (
       <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
         <rect x="3" y="8" width="22" height="17" rx="3" stroke="#B8956A" strokeWidth="1.5"/>
@@ -30,7 +28,7 @@ const BUBBLES = [
     desc: 'תשואות, תזרים, מיסוי, השוואות וניתוחי עסקה.',
   },
   {
-    id: 'rental-contract' as Page,
+    id: 'contracts-hub' as Page,
     icon: (
       <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
         <rect x="5" y="3" width="18" height="22" rx="3" stroke="#B8956A" strokeWidth="1.5"/>
@@ -46,17 +44,17 @@ const BUBBLES = [
 
 const FEATURE_ICONS = [
   {
-    id: 'property-value' as Page,
-    icon: (<svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M3 9.5L12 3l9 6.5V21H3V9.5z" stroke="#B8956A" strokeWidth="1.4" strokeLinejoin="round"/><rect x="9" y="14" width="6" height="7" rx="1" stroke="#B8956A" strokeWidth="1.2"/></svg>),
+    id: 'leads' as Page,
+    icon: (<svg width="24" height="24" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="8" r="4" stroke="#B8956A" strokeWidth="1.4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7" stroke="#B8956A" strokeWidth="1.4" strokeLinecap="round"/></svg>),
     label: 'ניהול דירות\nולקוחות',
   },
   {
-    id: 'mortgage' as Page,
+    id: 'calcs-hub' as Page,
     icon: (<svg width="24" height="24" viewBox="0 0 24 24" fill="none"><rect x="3" y="7" width="18" height="13" rx="2" stroke="#B8956A" strokeWidth="1.4"/><path d="M7 7V5a2 2 0 014 0v2M13 7V5a2 2 0 014 0v2" stroke="#B8956A" strokeWidth="1.2" strokeLinecap="round"/><path d="M7 12h4M7 15.5h6" stroke="#B8956A" strokeWidth="1.2" strokeLinecap="round"/></svg>),
     label: 'חישובים\nמתקדמים',
   },
   {
-    id: 'rental-contract' as Page,
+    id: 'contracts-hub' as Page,
     icon: (<svg width="24" height="24" viewBox="0 0 24 24" fill="none"><rect x="4" y="2" width="16" height="20" rx="2" stroke="#B8956A" strokeWidth="1.4"/><path d="M8 7h8M8 11h8M8 15h5" stroke="#B8956A" strokeWidth="1.2" strokeLinecap="round"/></svg>),
     label: 'חוזים\nומסמכים',
   },

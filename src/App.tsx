@@ -1,6 +1,9 @@
 import { useState } from 'react'
 import Layout from './components/Layout'
 import Home from './pages/Home'
+import LeadsPage from './pages/LeadsPage'
+import CalcHub from './pages/CalcHub'
+import ContractsHub from './pages/ContractsHub'
 import YieldCalc from './pages/YieldCalc'
 import MortgageCalc from './pages/MortgageCalc'
 import EquityCalc from './pages/EquityCalc'
@@ -11,6 +14,9 @@ import SaleContract from './pages/SaleContract'
 
 export type Page =
   | 'home'
+  | 'leads'
+  | 'calcs-hub'
+  | 'contracts-hub'
   | 'yield'
   | 'mortgage'
   | 'equity'
@@ -25,6 +31,9 @@ export default function App() {
   const renderPage = () => {
     switch (page) {
       case 'home': return <Home onNavigate={setPage} />
+      case 'leads': return <LeadsPage />
+      case 'calcs-hub': return <CalcHub onNavigate={setPage} />
+      case 'contracts-hub': return <ContractsHub onNavigate={setPage} />
       case 'yield': return <YieldCalc />
       case 'mortgage': return <MortgageCalc />
       case 'equity': return <EquityCalc />

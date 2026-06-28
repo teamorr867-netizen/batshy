@@ -3,13 +3,16 @@ import type { Page } from '../App'
 
 const NAV_ITEMS = [
   { id: 'home' as Page, label: 'ראשי', icon: '✦' },
-  { id: 'divider-1', label: 'מחשבונים', icon: '' },
+  { id: 'leads' as Page, label: 'ניהול לידים', icon: '👤' },
+  { id: 'divider-calcs', label: 'מחשבונים', icon: '' },
+  { id: 'calcs-hub' as Page, label: 'כל המחשבונים', icon: '⊞' },
   { id: 'yield' as Page, label: 'מחשבון תשואה', icon: '↗' },
   { id: 'mortgage' as Page, label: 'מחשבון משכנתא', icon: '⬡' },
   { id: 'equity' as Page, label: 'הון עצמי', icon: '◈' },
   { id: 'property-value' as Page, label: 'הערכת שווי', icon: '⌂' },
   { id: 'tax' as Page, label: 'מחשבון מסים', icon: '◻' },
-  { id: 'divider-2', label: 'חוזים', icon: '' },
+  { id: 'divider-contracts', label: 'חוזים', icon: '' },
+  { id: 'contracts-hub' as Page, label: 'כל החוזים', icon: '📋' },
   { id: 'rental-contract' as Page, label: 'חוזה שכירות', icon: '✍' },
   { id: 'sale-contract' as Page, label: 'חוזה מכירה', icon: '⊕' },
 ]
@@ -25,7 +28,6 @@ export default function Layout({ currentPage, onNavigate, children }: Props) {
 
   return (
     <div className="flex min-h-screen bg-cream">
-      {/* Mobile overlay */}
       {mobileOpen && (
         <div className="fixed inset-0 bg-ink/30 z-20 md:hidden backdrop-blur-sm"
           onClick={() => setMobileOpen(false)} />
@@ -38,7 +40,7 @@ export default function Layout({ currentPage, onNavigate, children }: Props) {
 
         {/* Logo */}
         <div className="p-8 pb-6 border-b border-cream-dark">
-          <div className="focus-logo text-2xl mb-1">FOCUS</div>
+          <div className="logo-focus text-2xl mb-1">FOCUS</div>
           <div className="text-ink-muted text-xs tracking-wide">מתווך חכם · הכל במקום אחד</div>
         </div>
 
@@ -67,7 +69,6 @@ export default function Layout({ currentPage, onNavigate, children }: Props) {
           })}
         </nav>
 
-        {/* Footer */}
         <div className="p-6 border-t border-cream-dark">
           <div className="text-xs text-ink-faint text-center leading-relaxed">
             כל החישובים הם לצרכי הדרכה בלבד
@@ -79,7 +80,7 @@ export default function Layout({ currentPage, onNavigate, children }: Props) {
       <main className="flex-1 md:mr-72 min-h-screen flex flex-col">
         {/* Mobile header */}
         <header className="md:hidden sticky top-0 bg-card/90 backdrop-blur border-b border-cream-dark p-4 flex items-center justify-between z-10">
-          <div className="focus-logo text-xl">FOCUS</div>
+          <div className="logo-focus text-xl">FOCUS</div>
           <button onClick={() => setMobileOpen(true)}
             className="w-10 h-10 rounded-xl bg-cream-light flex items-center justify-center text-ink">
             <span className="text-lg">☰</span>

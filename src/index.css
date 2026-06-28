@@ -50,7 +50,18 @@ body {
     @apply text-ink-muted text-sm mb-6;
   }
   .focus-logo {
-    @apply font-black tracking-[0.25em] text-ink uppercase;
+    font-family: 'Josefin Sans', sans-serif;
+    font-weight: 200;
+    letter-spacing: 0.35em;
+    color: #1C1916;
+    text-transform: uppercase;
+  }
+  .logo-focus {
+    font-family: 'Josefin Sans', sans-serif;
+    font-weight: 200;
+    letter-spacing: 0.35em;
+    color: #1C1916;
+    text-transform: uppercase;
   }
   .bubble {
     @apply w-16 h-16 rounded-full bg-card shadow-soft flex items-center justify-center border-2 border-cream-dark flex-shrink-0;
