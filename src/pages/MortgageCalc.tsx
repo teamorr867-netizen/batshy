@@ -10,13 +10,8 @@ export default function MortgageCalc() {
   const [rate, setRate] = useState('4.5')
   const [years, setYears] = useState('25')
   const [result, setResult] = useState<null | {
-    loan: number
-    monthly: number
-    totalPaid: number
-    totalInterest: number
-    ltv: number
-    feasible: boolean
-    maxLoan: number
+    loan: number; monthly: number; totalPaid: number
+    totalInterest: number; ltv: number; feasible: boolean; maxLoan: number
   }>(null)
 
   const calculate = () => {
@@ -24,32 +19,25 @@ export default function MortgageCalc() {
     const eq = parseFloat(equity.replace(/,/g, ''))
     const r = parseFloat(rate) / 100 / 12
     const n = parseFloat(years) * 12
-
     if (!price || !eq) return
-
     const loan = price - eq
     const ltv = (loan / price) * 100
     const maxLoan = price * 0.75
     const feasible = loan <= maxLoan && eq >= price * 0.25
-
-    let monthly = 0
-    if (r > 0) {
-      monthly = loan * (r * Math.pow(1 + r, n)) / (Math.pow(1 + r, n) - 1)
-    } else {
-      monthly = loan / n
-    }
-
+    const monthly = r > 0
+      ? loan * (r * Math.pow(1 + r, n)) / (Math.pow(1 + r, n) - 1)
+      : loan / n
     const totalPaid = monthly * n
     const totalInterest = totalPaid - loan
-
     setResult({ loan, monthly, totalPaid, totalInterest, ltv, feasible, maxLoan })
   }
 
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="section-title">🏦 מחשבון משכנתא</h1>
-        <p className="section-sub">בדוק החזרים חודשיים וכדאיות משכנתא</p>
+        <div className="text-xs font-bold text-bronze tracking-widest uppercase mb-1">מחשבון</div>
+        <h1 className="section-title">משכנתא</h1>
+        <p className="section-sub">בדוק החזרים חודשיים וכדאיות</p>
       </div>
 
       <div className="card space-y-4">
@@ -67,64 +55,61 @@ export default function MortgageCalc() {
             <input className="input-field" type="number" step="0.1" min="0" max="20" value={rate} onChange={e => setRate(e.target.value)} />
           </div>
           <div>
-            <label className="label">תקופת הלוואה (שנים)</label>
+            <label className="label">תקופה (שנים)</label>
             <select className="input-field" value={years} onChange={e => setYears(e.target.value)}>
               {[10, 15, 20, 25, 30].map(y => <option key={y} value={y}>{y} שנים</option>)}
             </select>
           </div>
         </div>
-        <button className="btn-gold w-full" onClick={calculate}>חשב משכנתא</button>
+        <button className="btn-bronze w-full" onClick={calculate}>חשב משכנתא</button>
       </div>
 
       {result && (
         <div className="space-y-4">
-          {/* Feasibility */}
-          <div className={`card border ${result.feasible ? 'border-green-500/40 bg-green-500/5' : 'border-red-500/40 bg-red-500/5'}`}>
+          <div className={`card border-2 ${result.feasible ? 'border-emerald-200 bg-emerald-50' : 'border-red-200 bg-red-50'}`}>
             <div className="flex items-center gap-3">
-              <span className="text-3xl">{result.feasible ? '✅' : '❌'}</span>
+              <div className={`w-10 h-10 rounded-2xl flex items-center justify-center text-lg
+                ${result.feasible ? 'bg-emerald-100 text-emerald-600' : 'bg-red-100 text-red-500'}`}>
+                {result.feasible ? '✓' : '✕'}
+              </div>
               <div>
-                <div className={`font-bold text-lg ${result.feasible ? 'text-green-400' : 'text-red-400'}`}>
+                <div className={`font-bold ${result.feasible ? 'text-emerald-700' : 'text-red-600'}`}>
                   {result.feasible ? 'המשכנתא אפשרית' : 'המשכנתא אינה אפשרית'}
                 </div>
-                <div className="text-gray-400 text-sm">
-                  {result.feasible
-                    ? `יחס מימון: ${result.ltv.toFixed(1)}% (מקסימום 75%)`
-                    : `נדרש הון עצמי מינימלי: ₪${fmt(result.maxLoan * 0.25 + (parseFloat(propertyPrice.replace(/,/g, '')) - result.loan * 1))} — יחס מימון נוכחי: ${result.ltv.toFixed(1)}%`
-                  }
+                <div className="text-ink-muted text-xs mt-0.5">
+                  יחס מימון: {result.ltv.toFixed(1)}% (מקסימום 75%)
                 </div>
               </div>
             </div>
           </div>
 
-          {/* Monthly payment highlight */}
-          <div className="result-box text-center py-6">
-            <div className="text-gray-400 text-sm mb-1">החזר חודשי</div>
-            <div className="text-5xl font-black text-gold">₪{fmt(result.monthly)}</div>
-            <div className="text-gray-500 text-sm mt-2">לחודש למשך {years} שנים</div>
+          <div className="card text-center py-8">
+            <div className="text-ink-muted text-xs uppercase tracking-widest mb-2">החזר חודשי</div>
+            <div className="text-5xl font-black text-ink mb-1">₪{fmt(result.monthly)}</div>
+            <div className="text-ink-faint text-sm">לחודש למשך {years} שנים</div>
           </div>
 
-          {/* Details grid */}
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-2 gap-3">
             {[
-              { label: 'סכום הלוואה', value: `₪${fmt(result.loan)}`, sub: `${result.ltv.toFixed(1)}% מימון` },
-              { label: 'סה"כ תשלום', value: `₪${fmt(result.totalPaid)}`, sub: 'על כל התקופה' },
-              { label: 'סה"כ ריבית', value: `₪${fmt(result.totalInterest)}`, sub: `${((result.totalInterest / result.loan) * 100).toFixed(0)}% מהקרן` },
-              { label: 'יחס מימון', value: `${result.ltv.toFixed(1)}%`, sub: result.ltv <= 75 ? 'תקין' : 'גבוה מהמותר' },
+              { label: 'סכום הלוואה', value: `₪${fmt(result.loan)}` },
+              { label: 'סה"כ תשלום', value: `₪${fmt(result.totalPaid)}` },
+              { label: 'סה"כ ריבית', value: `₪${fmt(result.totalInterest)}` },
+              { label: 'יחס מימון', value: `${result.ltv.toFixed(1)}%` },
             ].map(item => (
-              <div key={item.label} className="result-box">
-                <div className="text-gray-400 text-xs mb-1">{item.label}</div>
-                <div className="text-xl font-bold text-white">{item.value}</div>
-                <div className="text-gray-600 text-xs mt-1">{item.sub}</div>
+              <div key={item.label} className="result-box text-center">
+                <div className="text-ink-faint text-xs mb-1">{item.label}</div>
+                <div className="font-bold text-ink">{item.value}</div>
               </div>
             ))}
           </div>
 
-          {/* Amortization info */}
-          <div className="card">
-            <h3 className="font-bold text-gold text-sm mb-3">טיפ מהרובוט</h3>
-            <p className="text-gray-400 text-sm leading-relaxed">
-              עם ריבית של {rate}% ל-{years} שנה, תשלם ₪{fmt(result.totalInterest)} ריבית בלבד.
-              {result.totalInterest > result.loan * 0.5 && ' שקול לקצר את תקופת ההלוואה לחיסכון משמעותי בריבית.'}
+          <div className="card-flat">
+            <div className="text-xs font-bold text-bronze mb-2">✦ טיפ מ-FOCUS</div>
+            <p className="text-ink-muted text-sm leading-relaxed">
+              עם ריבית {rate}% ל-{years} שנה, תשלם ₪{fmt(result.totalInterest)} ריבית בלבד —
+              {result.totalInterest > result.loan * 0.5
+                ? ' שקול לקצר את התקופה לחיסכון משמעותי.'
+                : ' יחס ריבית סביר.'}
             </p>
           </div>
         </div>

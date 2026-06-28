@@ -5,9 +5,9 @@ function fmt(n: number) {
 }
 
 const HOME_TYPES = [
-  { id: 'first', label: 'דירה ראשונה', ratio: 0.25, desc: 'מינימום 25% הון עצמי' },
-  { id: 'second', label: 'דירה שניה', ratio: 0.30, desc: 'מינימום 30% הון עצמי' },
-  { id: 'investment', label: 'דירת השקעה', ratio: 0.40, desc: 'מינימום 40% הון עצמי' },
+  { id: 'first', label: 'דירה ראשונה', ratio: 0.25, desc: 'מינימום 25%' },
+  { id: 'second', label: 'דירה שניה', ratio: 0.30, desc: 'מינימום 30%' },
+  { id: 'investment', label: 'השקעה', ratio: 0.40, desc: 'מינימום 40%' },
 ]
 
 export default function EquityCalc() {
@@ -15,77 +15,43 @@ export default function EquityCalc() {
   const [currentEquity, setCurrentEquity] = useState('')
   const [homeType, setHomeType] = useState('first')
   const [result, setResult] = useState<null | {
-    required: number
-    maxLoan: number
-    gap: number
-    ratio: number
-    canBuy: boolean
-    additionalCosts: {
-      purchaseTax: number
-      lawyer: number
-      agent: number
-      renovation: number
-      total: number
-    }
-    totalNeeded: number
+    required: number; maxLoan: number; gap: number; ratio: number
+    canBuy: boolean; additionalCosts: { purchaseTax: number; lawyer: number; agent: number; total: number }; totalNeeded: number
   }>(null)
 
   const calculate = () => {
     const p = parseFloat(price.replace(/,/g, ''))
     const eq = parseFloat(currentEquity.replace(/,/g, '')) || 0
     const type = HOME_TYPES.find(t => t.id === homeType)!
-
     if (!p) return
-
     const required = p * type.ratio
     const maxLoan = p * (1 - type.ratio)
     const gap = Math.max(0, required - eq)
-
-    // Purchase tax (rough estimate for first home under 2M)
     let purchaseTax = 0
     if (homeType === 'first') {
       const BRACKETS = [
-        { limit: 1978745, rate: 0 },
-        { limit: 2347495, rate: 0.035 },
-        { limit: 6055070, rate: 0.05 },
-        { limit: 20183565, rate: 0.08 },
-        { limit: Infinity, rate: 0.10 },
+        { limit: 1978745, rate: 0 }, { limit: 2347495, rate: 0.035 },
+        { limit: 6055070, rate: 0.05 }, { limit: 20183565, rate: 0.08 }, { limit: Infinity, rate: 0.10 },
       ]
       let prev = 0
       for (const b of BRACKETS) {
-        if (p > prev) {
-          purchaseTax += Math.min(p - prev, b.limit - prev) * b.rate
-          prev = b.limit
-        }
+        if (p > prev) { purchaseTax += Math.min(p - prev, b.limit - prev) * b.rate; prev = b.limit }
       }
     } else {
-      if (p <= 6055070) purchaseTax = p * 0.08
-      else purchaseTax = 6055070 * 0.08 + (p - 6055070) * 0.10
+      purchaseTax = p <= 6055070 ? p * 0.08 : 6055070 * 0.08 + (p - 6055070) * 0.10
     }
-
     const lawyer = p * 0.005
     const agent = p * 0.02
-    const renovation = p * 0.03
-
-    const additionalCosts = { purchaseTax, lawyer, agent, renovation, total: purchaseTax + lawyer + agent }
-    const totalNeeded = required + additionalCosts.total
-
-    setResult({
-      required,
-      maxLoan,
-      gap,
-      ratio: type.ratio,
-      canBuy: eq >= required,
-      additionalCosts,
-      totalNeeded,
-    })
+    const additionalCosts = { purchaseTax, lawyer, agent, total: purchaseTax + lawyer + agent }
+    setResult({ required, maxLoan, gap, ratio: type.ratio, canBuy: eq >= required, additionalCosts, totalNeeded: required + additionalCosts.total })
   }
 
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="section-title">💰 מחשבון הון עצמי</h1>
-        <p className="section-sub">כמה הון עצמי נדרש לרכישת הנכס?</p>
+        <div className="text-xs font-bold text-bronze tracking-widest uppercase mb-1">מחשבון</div>
+        <h1 className="section-title">הון עצמי</h1>
+        <p className="section-sub">כמה הון עצמי נדרש לרכישה?</p>
       </div>
 
       <div className="card space-y-4">
@@ -96,14 +62,14 @@ export default function EquityCalc() {
               <button
                 key={t.id}
                 onClick={() => setHomeType(t.id)}
-                className={`p-3 rounded-xl border text-sm font-medium transition-all ${
+                className={`p-3 rounded-2xl border-2 text-sm font-medium transition-all ${
                   homeType === t.id
-                    ? 'border-gold bg-gold/10 text-gold'
-                    : 'border-dark-border text-gray-400 hover:border-gray-500'
+                    ? 'border-bronze bg-bronze/5 text-bronze'
+                    : 'border-cream-dark text-ink-muted hover:border-bronze/40'
                 }`}
               >
-                <div>{t.label}</div>
-                <div className="text-xs mt-0.5 opacity-70">{(t.ratio * 100).toFixed(0)}%</div>
+                <div className="font-bold text-xs">{t.label}</div>
+                <div className="text-xs opacity-70 mt-0.5">{t.desc}</div>
               </button>
             ))}
           </div>
@@ -118,55 +84,54 @@ export default function EquityCalc() {
             <input className="input-field" placeholder="500,000" value={currentEquity} onChange={e => setCurrentEquity(e.target.value)} />
           </div>
         </div>
-        <button className="btn-gold w-full" onClick={calculate}>חשב הון עצמי</button>
+        <button className="btn-bronze w-full" onClick={calculate}>חשב הון עצמי</button>
       </div>
 
       {result && (
         <div className="space-y-4">
-          {/* Status */}
-          <div className={`card border ${result.canBuy ? 'border-green-500/40 bg-green-500/5' : 'border-red-500/40 bg-red-500/5'}`}>
+          <div className={`card border-2 ${result.canBuy ? 'border-emerald-200 bg-emerald-50' : 'border-amber-200 bg-amber-50'}`}>
             <div className="flex items-center gap-3">
-              <span className="text-3xl">{result.canBuy ? '✅' : '⚠️'}</span>
+              <div className={`w-10 h-10 rounded-2xl flex items-center justify-center text-lg
+                ${result.canBuy ? 'bg-emerald-100 text-emerald-600' : 'bg-amber-100 text-amber-600'}`}>
+                {result.canBuy ? '✓' : '!'}
+              </div>
               <div>
-                <div className={`font-bold text-lg ${result.canBuy ? 'text-green-400' : 'text-red-400'}`}>
-                  {result.canBuy ? 'ההון העצמי מספיק לרכישה!' : `חסרים ₪${fmt(result.gap)} להון עצמי`}
+                <div className={`font-bold ${result.canBuy ? 'text-emerald-700' : 'text-amber-700'}`}>
+                  {result.canBuy ? 'ההון העצמי מספיק!' : `חסרים ₪${fmt(result.gap)}`}
                 </div>
-                <div className="text-gray-400 text-sm">
-                  מינימום נדרש: ₪{fmt(result.required)} ({(result.ratio * 100).toFixed(0)}% ממחיר הנכס)
+                <div className="text-ink-muted text-xs mt-0.5">
+                  מינימום נדרש: ₪{fmt(result.required)} ({(result.ratio * 100).toFixed(0)}%)
                 </div>
               </div>
             </div>
           </div>
 
-          {/* Main numbers */}
           <div className="grid grid-cols-2 gap-4">
-            <div className="result-box text-center">
-              <div className="text-gray-400 text-sm mb-1">הון עצמי נדרש</div>
-              <div className="text-3xl font-black text-gold">₪{fmt(result.required)}</div>
+            <div className="card text-center py-6">
+              <div className="text-ink-faint text-xs mb-2 uppercase tracking-wide">הון נדרש</div>
+              <div className="text-3xl font-black text-bronze">₪{fmt(result.required)}</div>
             </div>
-            <div className="result-box text-center">
-              <div className="text-gray-400 text-sm mb-1">משכנתא מקסימלית</div>
-              <div className="text-3xl font-black text-white">₪{fmt(result.maxLoan)}</div>
+            <div className="card text-center py-6">
+              <div className="text-ink-faint text-xs mb-2 uppercase tracking-wide">משכנתא מקס׳</div>
+              <div className="text-3xl font-black text-ink">₪{fmt(result.maxLoan)}</div>
             </div>
           </div>
 
-          {/* Additional costs */}
           <div className="card space-y-3">
-            <h3 className="font-bold text-gold text-sm uppercase tracking-wide">עלויות נוספות</h3>
+            <div className="text-xs font-bold text-bronze tracking-widest uppercase mb-2">עלויות נוספות</div>
             {[
-              { label: 'מס רכישה (מוערך)', value: result.additionalCosts.purchaseTax },
+              { label: 'מס רכישה', value: result.additionalCosts.purchaseTax },
               { label: 'שכ"ט עו"ד (~0.5%)', value: result.additionalCosts.lawyer },
               { label: 'עמלת מתווך (~2%)', value: result.additionalCosts.agent },
-              { label: 'שיפוץ (לשיקולך, ~3%)', value: result.additionalCosts.renovation },
             ].map(row => (
-              <div key={row.label} className="flex justify-between items-center border-b border-dark-border pb-2 text-sm">
-                <span className="text-gray-400">{row.label}</span>
-                <span className="text-white font-medium">₪{fmt(row.value)}</span>
+              <div key={row.label} className="flex justify-between py-2 border-b border-cream-dark last:border-0 text-sm">
+                <span className="text-ink-muted">{row.label}</span>
+                <span className="font-medium text-ink">₪{fmt(row.value)}</span>
               </div>
             ))}
-            <div className="flex justify-between items-center pt-1">
-              <span className="text-white font-bold">סה"כ נדרש (ללא שיפוץ)</span>
-              <span className="text-gold font-black text-lg">₪{fmt(result.totalNeeded)}</span>
+            <div className="flex justify-between pt-2">
+              <span className="font-bold text-ink">סה"כ נדרש</span>
+              <span className="font-black text-bronze text-lg">₪{fmt(result.totalNeeded)}</span>
             </div>
           </div>
         </div>
