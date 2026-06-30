@@ -159,6 +159,7 @@ function testWebhook() {
     },
     parameter: {}
   };
-  doPost(fakeData);
-  SpreadsheetApp.getUi().alert("✅ ליד בדיקה נוסף לטאב '" + LEADS_TAB + "'\n\nצפוי: מדיה=פייסבוק, ערוץ=טופס ליד");
+  var result = doPost(fakeData);
+  Logger.log("✅ תוצאה: " + result.getContent());
+  Logger.log("ליד בדיקה נוסף לטאב: " + LEADS_TAB);
 }
