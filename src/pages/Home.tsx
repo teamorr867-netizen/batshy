@@ -79,63 +79,14 @@ export default function Home({ onNavigate }: { onNavigate: (p: Page) => void }) 
             <div className="text-ink-muted text-xs mt-1 tracking-wide">Focus on your genius. We'll handle the rest.</div>
           </div>
 
-          {/* Building background */}
-          <svg className="absolute left-0 bottom-0 opacity-20" width="180" height="280" viewBox="0 0 180 280" fill="none">
-            <rect x="10" y="80" width="70" height="200" stroke="#B8956A" strokeWidth="1.2"/>
-            <rect x="20" y="92" width="14" height="20" stroke="#B8956A" strokeWidth="1"/>
-            <rect x="44" y="92" width="14" height="20" stroke="#B8956A" strokeWidth="1"/>
-            <rect x="20" y="124" width="14" height="20" stroke="#B8956A" strokeWidth="1"/>
-            <rect x="44" y="124" width="14" height="20" stroke="#B8956A" strokeWidth="1"/>
-            <rect x="20" y="156" width="14" height="20" stroke="#B8956A" strokeWidth="1"/>
-            <rect x="44" y="156" width="14" height="20" stroke="#B8956A" strokeWidth="1"/>
-            <rect x="90" y="120" width="80" height="160" stroke="#B8956A" strokeWidth="1.2"/>
-            <rect x="102" y="134" width="14" height="20" stroke="#B8956A" strokeWidth="1"/>
-            <rect x="126" y="134" width="14" height="20" stroke="#B8956A" strokeWidth="1"/>
-            <rect x="102" y="166" width="14" height="20" stroke="#B8956A" strokeWidth="1"/>
-            <rect x="126" y="166" width="14" height="20" stroke="#B8956A" strokeWidth="1"/>
-            <path d="M0 280 L180 280" stroke="#B8956A" strokeWidth="1"/>
-          </svg>
-
-          {/* Robot */}
-          <div className="absolute bottom-0 left-1/2 -translate-x-1/2">
-            <svg width="180" height="260" viewBox="0 0 180 260" fill="none">
-              <ellipse cx="90" cy="254" rx="50" ry="6" fill="#B8956A" fillOpacity="0.12"/>
-              <rect x="60" y="200" width="24" height="50" rx="10" fill="#EDE7DF" stroke="#D4C4B0" strokeWidth="1.5"/>
-              <rect x="96" y="200" width="24" height="50" rx="10" fill="#EDE7DF" stroke="#D4C4B0" strokeWidth="1.5"/>
-              <rect x="56" y="238" width="32" height="16" rx="8" fill="#E4DAD0" stroke="#C8B89A" strokeWidth="1.5"/>
-              <rect x="92" y="238" width="32" height="16" rx="8" fill="#E4DAD0" stroke="#C8B89A" strokeWidth="1.5"/>
-              <rect x="42" y="120" width="96" height="90" rx="16" fill="#F0EAE2" stroke="#D4C4B0" strokeWidth="1.5"/>
-              <rect x="56" y="136" width="68" height="44" rx="10" fill="#EDE7DF" stroke="#C8B89A" strokeWidth="1.2"/>
-              <circle cx="72" cy="155" r="5" fill="#B8956A" fillOpacity="0.9"/>
-              <circle cx="90" cy="155" r="5" fill="#B8956A" fillOpacity="0.5" className="pulse-bronze"/>
-              <circle cx="108" cy="155" r="5" fill="#B8956A" fillOpacity="0.9"/>
-              <rect x="64" y="168" width="52" height="4" rx="2" fill="#C8B89A" fillOpacity="0.5"/>
-              <rect x="10" y="125" width="34" height="66" rx="14" fill="#EDE7DF" stroke="#D4C4B0" strokeWidth="1.5"/>
-              <rect x="136" y="125" width="34" height="66" rx="14" fill="#EDE7DF" stroke="#D4C4B0" strokeWidth="1.5"/>
-              <rect x="6" y="176" width="22" height="14" rx="7" fill="#E4DAD0" stroke="#C8B89A" strokeWidth="1.5"/>
-              <rect x="-28" y="148" width="40" height="30" rx="5" fill="none" stroke="#B8956A" strokeWidth="1" strokeOpacity="0.6"/>
-              <line x1="-20" y1="157" x2="4" y2="157" stroke="#B8956A" strokeWidth="0.8" strokeOpacity="0.5"/>
-              <line x1="-20" y1="163" x2="0" y2="163" stroke="#B8956A" strokeWidth="0.8" strokeOpacity="0.5"/>
-              <line x1="6" y1="183" x2="0" y2="162" stroke="#B8956A" strokeWidth="0.8" strokeOpacity="0.4" strokeDasharray="3 2"/>
-              <rect x="152" y="176" width="22" height="14" rx="7" fill="#E4DAD0" stroke="#C8B89A" strokeWidth="1.5"/>
-              <rect x="74" y="114" width="32" height="14" rx="6" fill="#EAE4DC" stroke="#D4C4B0" strokeWidth="1.2"/>
-              <rect x="34" y="40" width="112" height="80" rx="24" fill="#F5F0EB" stroke="#D4C4B0" strokeWidth="1.5"/>
-              <rect x="50" y="56" width="30" height="22" rx="8" fill="#EDE7DF" stroke="#C8B89A" strokeWidth="1.5"/>
-              <rect x="100" y="56" width="30" height="22" rx="8" fill="#EDE7DF" stroke="#C8B89A" strokeWidth="1.5"/>
-              <circle cx="65" cy="67" r="7" fill="#B8956A"/>
-              <circle cx="115" cy="67" r="7" fill="#B8956A" className="pulse-bronze"/>
-              <circle cx="65" cy="67" r="3" fill="white"/>
-              <circle cx="115" cy="67" r="3" fill="white"/>
-              <circle cx="67" cy="65" r="1.5" fill="white" fillOpacity="0.7"/>
-              <circle cx="117" cy="65" r="1.5" fill="white" fillOpacity="0.7"/>
-              <path d="M58 96 Q90 110 122 96" fill="none" stroke="#C8B89A" strokeWidth="2" strokeLinecap="round"/>
-              <rect x="16" y="60" width="20" height="30" rx="8" fill="#EDE7DF" stroke="#D4C4B0" strokeWidth="1.5"/>
-              <rect x="144" y="60" width="20" height="30" rx="8" fill="#EDE7DF" stroke="#D4C4B0" strokeWidth="1.5"/>
-              <line x1="90" y1="40" x2="90" y2="20" stroke="#D4C4B0" strokeWidth="2" strokeLinecap="round"/>
-              <circle cx="90" cy="15" r="5.5" fill="#B8956A" className="pulse-bronze"/>
-              <circle cx="90" cy="15" r="2.5" fill="white"/>
-            </svg>
-          </div>
+          {/* Hero image */}
+          <img
+            src={`${import.meta.env.BASE_URL}hero.png`}
+            alt="FOCUS robot"
+            className="absolute inset-0 w-full h-full object-cover object-center"
+          />
+          {/* Gradient fade at bottom for smooth card transition */}
+          <div className="absolute bottom-0 left-0 right-0 h-40 bg-gradient-to-t from-card to-transparent" />
         </div>
 
         {/* White card */}
