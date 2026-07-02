@@ -92,6 +92,23 @@ body {
 }
 .pulse-bronze { animation: pulse-bronze 2s ease infinite; }
 
+/* Winding path waypoint animations */
+.wp-item {
+  opacity: 0;
+  transition: opacity 0.55s ease, transform 0.55s ease;
+}
+.wp-item.wp-visible {
+  opacity: 1;
+  transform: translateX(0) !important;
+}
+.wp-building {
+  opacity: 0;
+  transition: opacity 1s ease 0.5s;
+}
+.wp-building.wp-visible {
+  opacity: 0.12;
+}
+
 @media print {
   body { background: white; color: black; direction: rtl; }
   .no-print { display: none !important; }
