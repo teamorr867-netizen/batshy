@@ -1,7 +1,10 @@
 {
   "permissions": {
     "allow": [
-      "mcp__meta__*"
+      "mcp__meta__*",
+      "mcp__Canva__*",
+      "mcp__Gmail__*",
+      "mcp__github__*"
     ]
   }
 }
