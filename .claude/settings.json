@@ -5,6 +5,7 @@
       "mcp__Canva__*",
       "mcp__Gmail__*",
       "mcp__github__*"
-    ]
+    ],
+    "defaultMode": "auto"
   }
 }
