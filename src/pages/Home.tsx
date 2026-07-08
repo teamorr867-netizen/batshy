@@ -132,27 +132,28 @@ export default function Home({ onNavigate }: { onNavigate: (p: Page) => void }) 
       {/* ══ SCREEN 2 — Features ══ */}
       <div id="features-section" className="bg-cream-light px-5 pt-12 pb-16 relative overflow-hidden">
 
-        {/* Building illustration — right side */}
-        <svg className="absolute right-0 top-0 h-full opacity-[0.13] pointer-events-none" width="100" viewBox="0 0 100 700" fill="none" preserveAspectRatio="xMaxYMid meet">
-          {/* Main tall tower */}
-          <rect x="18" y="30" width="64" height="670" stroke="#7A6A54" strokeWidth="1.2"/>
-          {/* Setback top */}
-          <rect x="28" y="10" width="44" height="22" stroke="#7A6A54" strokeWidth="1"/>
-          {/* Windows - 3 cols × 18 rows */}
-          {Array.from({ length: 18 }, (_, row) =>
-            [26, 44, 62].map(cx => (
-              <rect key={`${row}-${cx}`} x={cx} y={48 + row * 34} width="10" height="16" rx="1"
+        {/* Building illustration — right side, tall apartment block */}
+        <svg className="absolute right-0 top-0 h-full opacity-[0.11] pointer-events-none" width="90" viewBox="0 0 90 800" fill="none" preserveAspectRatio="xMaxYMin meet">
+          {/* Main building body */}
+          <rect x="14" y="60" width="62" height="740" stroke="#7A6A54" strokeWidth="1.3"/>
+          {/* Roof/penthouse */}
+          <rect x="22" y="40" width="46" height="22" stroke="#7A6A54" strokeWidth="1"/>
+          <rect x="30" y="24" width="30" height="18" stroke="#7A6A54" strokeWidth="0.8"/>
+          {/* Windows — 3 cols × 20 rows */}
+          {Array.from({ length: 20 }, (_, row) =>
+            [22, 39, 56].map(cx => (
+              <rect key={`${row}-${cx}`} x={cx} y={76 + row * 34} width="11" height="18" rx="1.5"
                 stroke="#7A6A54" strokeWidth="0.7"
-                fill={row % 3 === 1 ? '#B8956A' : 'none'} fillOpacity="0.08"/>
+                fill={row % 4 === 2 ? '#B8956A' : 'none'} fillOpacity="0.09"/>
             ))
           )}
-          {/* Ground line */}
-          <path d="M0 700 L100 700" stroke="#7A6A54" strokeWidth="1"/>
-          {/* Small trees at base */}
-          <circle cx="8" cy="680" r="8" stroke="#7A6A54" strokeWidth="0.8"/>
-          <line x1="8" y1="688" x2="8" y2="700" stroke="#7A6A54" strokeWidth="0.8"/>
-          <circle cx="92" cy="685" r="6" stroke="#7A6A54" strokeWidth="0.8"/>
-          <line x1="92" y1="691" x2="92" y2="700" stroke="#7A6A54" strokeWidth="0.8"/>
+          {/* Ground */}
+          <path d="M0 800 L90 800" stroke="#7A6A54" strokeWidth="1.2"/>
+          {/* Trees */}
+          <circle cx="7" cy="776" r="10" stroke="#7A6A54" strokeWidth="0.8"/>
+          <line x1="7" y1="786" x2="7" y2="800" stroke="#7A6A54" strokeWidth="0.9"/>
+          <circle cx="83" cy="780" r="8" stroke="#7A6A54" strokeWidth="0.8"/>
+          <line x1="83" y1="788" x2="83" y2="800" stroke="#7A6A54" strokeWidth="0.9"/>
         </svg>
 
         {/* Title */}
@@ -163,42 +164,34 @@ export default function Home({ onNavigate }: { onNavigate: (p: Page) => void }) 
         </div>
 
         {/* Bubbles + callouts */}
-        <div className="relative z-10 mx-auto" style={{ maxWidth: 330 }}>
+        <div className="relative z-10 mx-auto" style={{ maxWidth: 340 }}>
 
-          {/* S-curve connecting line — positioned behind bubbles */}
+          {/* Straight vertical connecting line behind circles */}
           <svg
             className="absolute pointer-events-none"
-            style={{ left: 35, top: 0, width: 26, height: 320 }}
-            viewBox="0 0 26 320"
+            style={{ left: 46, top: 0, width: 4, height: '100%' }}
+            preserveAspectRatio="none"
           >
             <defs>
-              <linearGradient id="sGrad" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stopColor="#C8A87A"/>
-                <stop offset="50%" stopColor="#D4B896"/>
-                <stop offset="100%" stopColor="#E0D4C4"/>
+              <linearGradient id="vGrad" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stopColor="#D4B896" stopOpacity="0.9"/>
+                <stop offset="85%" stopColor="#D4B896" stopOpacity="0.5"/>
+                <stop offset="100%" stopColor="#D4B896" stopOpacity="0"/>
               </linearGradient>
             </defs>
-            <path
-              d="M 13 55 C 24 100, 2 115, 13 165 C 24 215, 2 230, 13 280"
-              stroke="url(#sGrad)" strokeWidth="1.6" fill="none" strokeLinecap="round"
-            />
-            {/* End dot */}
-            <circle cx="13" cy="280" r="4" fill="#D4B896" stroke="#C8A87A" strokeWidth="1"/>
+            <rect x="1.5" y="0" width="1" height="100%" fill="url(#vGrad)"/>
           </svg>
 
-          <div className="flex flex-col gap-6">
-            {BUBBLES.map((b, i) => (
+          <div className="flex flex-col gap-7">
+            {BUBBLES.map((b) => (
               <div key={String(b.id)} dir="ltr" className="flex items-center gap-4">
 
-                {/* Circle bubble */}
+                {/* Circle bubble — all with same golden glow ring */}
                 <div
-                  className={`w-24 h-24 rounded-full flex-shrink-0 flex flex-col items-center justify-center gap-1.5
-                    bg-cream-light border-2 relative z-10 transition-all
-                    ${i === 1 ? 'border-bronze/40' : 'border-[#D8CFBF]'}`}
+                  className="w-24 h-24 rounded-full flex-shrink-0 flex flex-col items-center justify-center gap-1.5
+                    bg-cream-light border-2 border-bronze/40 relative z-10"
                   style={{
-                    boxShadow: i === 1
-                      ? '0 0 0 6px rgba(184,149,106,0.10), 0 0 22px rgba(184,149,106,0.20)'
-                      : '0 2px 10px rgba(0,0,0,0.05)'
+                    boxShadow: '0 0 0 7px rgba(184,149,106,0.10), 0 0 26px rgba(184,149,106,0.22)'
                   }}
                 >
                   {b.icon}
@@ -207,20 +200,29 @@ export default function Home({ onNavigate }: { onNavigate: (p: Page) => void }) 
                   </div>
                 </div>
 
-                {/* Callout card */}
+                {/* Speech-bubble callout card */}
                 <button
                   onClick={() => onNavigate(b.id)}
                   dir="rtl"
-                  className="flex-1 bg-card rounded-2xl p-4 shadow-soft hover:shadow-gold transition-all group text-right"
+                  className="flex-1 bg-card rounded-2xl p-4 shadow-soft hover:shadow-gold transition-all group text-right relative"
                 >
+                  {/* Arrow pointing left toward the circle */}
+                  <span
+                    className="absolute top-1/2 -translate-y-1/2 pointer-events-none"
+                    style={{
+                      right: '100%',
+                      width: 0, height: 0,
+                      borderTop: '7px solid transparent',
+                      borderBottom: '7px solid transparent',
+                      borderLeft: '8px solid white',
+                      display: 'block',
+                    }}
+                  />
                   <div className="font-black text-ink text-sm mb-1">{b.subtitle}</div>
                   <div className="text-ink-muted text-xs leading-relaxed mb-3">{b.desc}</div>
                   <div dir="ltr" className="flex justify-start">
-                    <div className={`w-7 h-7 rounded-full border-2 flex items-center justify-center text-sm font-bold
-                      transition-all
-                      ${i === 1
-                        ? 'border-bronze text-bronze bg-bronze/5'
-                        : 'border-[#D8CFBF] text-ink-faint group-hover:border-bronze group-hover:text-bronze'}`}>
+                    <div className="w-7 h-7 rounded-full border-2 border-[#D8CFBF] text-ink-faint flex items-center justify-center text-sm font-bold
+                      group-hover:border-bronze group-hover:text-bronze transition-all">
                       ›
                     </div>
                   </div>
@@ -228,6 +230,11 @@ export default function Home({ onNavigate }: { onNavigate: (p: Page) => void }) 
 
               </div>
             ))}
+          </div>
+
+          {/* End dot */}
+          <div className="flex justify-start mt-1" style={{ paddingLeft: 44 }}>
+            <div className="w-3 h-3 rounded-full bg-bronze/30 border border-bronze/40" />
           </div>
         </div>
 
