@@ -132,33 +132,35 @@ export default function Home({ onNavigate }: { onNavigate: (p: Page) => void }) 
       {/* ══ SCREEN 2 — Features ══ */}
       <div id="features-section" className="bg-cream-light px-5 pt-12 pb-16 relative overflow-hidden">
 
-        {/* Building illustration — right side, tall apartment block */}
-        <svg className="absolute right-0 top-0 h-full opacity-[0.11] pointer-events-none" width="90" viewBox="0 0 90 800" fill="none" preserveAspectRatio="xMaxYMin meet">
-          {/* Main building body */}
-          <rect x="14" y="60" width="62" height="740" stroke="#7A6A54" strokeWidth="1.3"/>
-          {/* Roof/penthouse */}
-          <rect x="22" y="40" width="46" height="22" stroke="#7A6A54" strokeWidth="1"/>
-          <rect x="30" y="24" width="30" height="18" stroke="#7A6A54" strokeWidth="0.8"/>
-          {/* Windows — 3 cols × 20 rows */}
-          {Array.from({ length: 20 }, (_, row) =>
-            [22, 39, 56].map(cx => (
-              <rect key={`${row}-${cx}`} x={cx} y={76 + row * 34} width="11" height="18" rx="1.5"
-                stroke="#7A6A54" strokeWidth="0.7"
-                fill={row % 4 === 2 ? '#B8956A' : 'none'} fillOpacity="0.09"/>
+        {/* Building illustration — tall residential block, right side */}
+        <svg className="absolute right-0 top-0 opacity-[0.10] pointer-events-none" style={{ height: '100%', width: 110 }} viewBox="0 0 110 700" fill="none" preserveAspectRatio="xMaxYMin meet">
+          {/* Building body */}
+          <rect x="20" y="80" width="72" height="620" stroke="#7A6A54" strokeWidth="1.2" rx="2"/>
+          {/* Upper step */}
+          <rect x="30" y="55" width="52" height="27" stroke="#7A6A54" strokeWidth="1"/>
+          {/* Roof */}
+          <rect x="38" y="38" width="36" height="19" stroke="#7A6A54" strokeWidth="0.9"/>
+          {/* Windows 3 cols × 17 rows */}
+          {Array.from({ length: 17 }, (_, row) =>
+            [28, 50, 72].map(cx => (
+              <rect key={`${row}-${cx}`} x={cx} y={96 + row * 34} width="14" height="20" rx="2"
+                stroke="#7A6A54" strokeWidth="0.75"
+                fill={row % 5 === 2 ? '#C8A87A' : 'none'} fillOpacity="0.10"/>
             ))
           )}
-          {/* Ground */}
-          <path d="M0 800 L90 800" stroke="#7A6A54" strokeWidth="1.2"/>
-          {/* Trees */}
-          <circle cx="7" cy="776" r="10" stroke="#7A6A54" strokeWidth="0.8"/>
-          <line x1="7" y1="786" x2="7" y2="800" stroke="#7A6A54" strokeWidth="0.9"/>
-          <circle cx="83" cy="780" r="8" stroke="#7A6A54" strokeWidth="0.8"/>
-          <line x1="83" y1="788" x2="83" y2="800" stroke="#7A6A54" strokeWidth="0.9"/>
+          {/* Ground line */}
+          <line x1="0" y1="700" x2="110" y2="700" stroke="#7A6A54" strokeWidth="1.1"/>
+          {/* Tree left */}
+          <circle cx="10" cy="682" r="11" stroke="#7A6A54" strokeWidth="0.8"/>
+          <line x1="10" y1="693" x2="10" y2="700" stroke="#7A6A54" strokeWidth="1"/>
+          {/* Tree right */}
+          <circle cx="100" cy="686" r="8" stroke="#7A6A54" strokeWidth="0.8"/>
+          <line x1="100" y1="694" x2="100" y2="700" stroke="#7A6A54" strokeWidth="1"/>
         </svg>
 
         {/* Title */}
         <div className="text-center mb-10 relative z-10">
-          <div className="logo-focus text-2xl mb-5 tracking-[0.35em]">FOCUS</div>
+          <div className="logo-focus text-2xl mb-3 tracking-[0.35em]">FOCUS</div>
           <div className="text-xl font-black text-ink mb-2">כל מה שאתה צריך – במקום אחד</div>
           <div className="text-ink-muted text-sm">אנחנו פה כדי לפשט, לייעל ולבצע עבורך.</div>
         </div>
@@ -166,32 +168,39 @@ export default function Home({ onNavigate }: { onNavigate: (p: Page) => void }) 
         {/* Bubbles + callouts */}
         <div className="relative z-10 mx-auto" style={{ maxWidth: 340 }}>
 
-          {/* Straight vertical connecting line behind circles */}
+          {/* Gentle S-curve connecting line — sits behind the circles */}
           <svg
-            className="absolute pointer-events-none"
-            style={{ left: 46, top: 0, width: 4, height: '100%' }}
-            preserveAspectRatio="none"
+            className="absolute pointer-events-none z-0"
+            style={{ left: 0, top: 0, width: 96, height: 360 }}
+            viewBox="0 0 96 360"
           >
             <defs>
-              <linearGradient id="vGrad" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stopColor="#D4B896" stopOpacity="0.9"/>
-                <stop offset="85%" stopColor="#D4B896" stopOpacity="0.5"/>
+              <linearGradient id="curveGrad" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%"  stopColor="#D4B896" stopOpacity="0.8"/>
+                <stop offset="80%" stopColor="#D4B896" stopOpacity="0.4"/>
                 <stop offset="100%" stopColor="#D4B896" stopOpacity="0"/>
               </linearGradient>
             </defs>
-            <rect x="1.5" y="0" width="1" height="100%" fill="url(#vGrad)"/>
+            {/* Path flows from center of circle 0 → center of circle 1 → center of circle 2 */}
+            {/* circle centers: y≈48, y≈178, y≈308 (96px circles, 30px gap) */}
+            <path
+              d="M 48 48 C 36 90, 60 128, 48 178 C 36 228, 60 264, 48 308"
+              stroke="url(#curveGrad)" strokeWidth="1.6" fill="none" strokeLinecap="round"
+            />
+            {/* Bottom end dot */}
+            <circle cx="48" cy="308" r="4" fill="#D4B896" fillOpacity="0.55"/>
           </svg>
 
-          <div className="flex flex-col gap-7">
+          <div className="flex flex-col" style={{ gap: 30 }}>
             {BUBBLES.map((b) => (
               <div key={String(b.id)} dir="ltr" className="flex items-center gap-4">
 
-                {/* Circle bubble — all with same golden glow ring */}
+                {/* Glowing circle — warm golden ring, same on all */}
                 <div
-                  className="w-24 h-24 rounded-full flex-shrink-0 flex flex-col items-center justify-center gap-1.5
-                    bg-cream-light border-2 border-bronze/40 relative z-10"
+                  className="w-24 h-24 rounded-full flex-shrink-0 flex flex-col items-center justify-center gap-1.5 bg-[#F7F3EE] border-2 relative z-10"
                   style={{
-                    boxShadow: '0 0 0 7px rgba(184,149,106,0.10), 0 0 26px rgba(184,149,106,0.22)'
+                    borderColor: '#D4B896',
+                    boxShadow: '0 0 0 5px rgba(212,184,150,0.18), 0 0 22px 4px rgba(212,184,150,0.38), 0 0 42px 8px rgba(184,149,106,0.14)',
                   }}
                 >
                   {b.icon}
@@ -200,24 +209,12 @@ export default function Home({ onNavigate }: { onNavigate: (p: Page) => void }) 
                   </div>
                 </div>
 
-                {/* Speech-bubble callout card */}
+                {/* Callout card — clean rounded rect, no arrow */}
                 <button
                   onClick={() => onNavigate(b.id)}
                   dir="rtl"
-                  className="flex-1 bg-card rounded-2xl p-4 shadow-soft hover:shadow-gold transition-all group text-right relative"
+                  className="flex-1 bg-card rounded-2xl p-4 shadow-soft hover:shadow-gold transition-all group text-right"
                 >
-                  {/* Arrow pointing left toward the circle */}
-                  <span
-                    className="absolute top-1/2 -translate-y-1/2 pointer-events-none"
-                    style={{
-                      right: '100%',
-                      width: 0, height: 0,
-                      borderTop: '7px solid transparent',
-                      borderBottom: '7px solid transparent',
-                      borderLeft: '8px solid white',
-                      display: 'block',
-                    }}
-                  />
                   <div className="font-black text-ink text-sm mb-1">{b.subtitle}</div>
                   <div className="text-ink-muted text-xs leading-relaxed mb-3">{b.desc}</div>
                   <div dir="ltr" className="flex justify-start">
@@ -230,11 +227,6 @@ export default function Home({ onNavigate }: { onNavigate: (p: Page) => void }) 
 
               </div>
             ))}
-          </div>
-
-          {/* End dot */}
-          <div className="flex justify-start mt-1" style={{ paddingLeft: 44 }}>
-            <div className="w-3 h-3 rounded-full bg-bronze/30 border border-bronze/40" />
           </div>
         </div>
 
